@@ -10,3 +10,9 @@ OpenEnv environment for IT incident triage and escalation.
 ## Quick Start
 
 See [my_env/README.md](my_env/README.md) for setup, usage, and baseline scores.
+```
+
+### 2. `outputs/` directory warning
+Every time you pushed, openenv warned:
+```
+Recommended directory missing: outputs/

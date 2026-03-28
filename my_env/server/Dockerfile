@@ -3,12 +3,9 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Install dependencies
-COPY server/requirements.txt ./requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+RUN pip install --no-cache-dir -r server/requirements.txt
 
-# Copy environment code
-COPY models.py ./models.py
-COPY server/ ./server/
 
 # HF Spaces uses port 7860
 EXPOSE 7860

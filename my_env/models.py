@@ -8,6 +8,9 @@ class TriageAction(Action):
     root_cause_alert: Optional[str] = None           # which alert ID is the root cause (hard)
     priority_order: Optional[List[str]] = None       # order to address alerts (hard)
     actions: Optional[Dict[str, str]] = None         # alert_id → recommended action (hard)
+
+    class Config:
+        extra="allow"
 class TriageObservation(Observation):
     """What the agent sees — alert data + feedback."""
     # done: bool and reward: Optional[float] inherited from Observation
