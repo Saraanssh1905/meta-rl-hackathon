@@ -1,0 +1,10 @@
+name: incident-triage
+version: "1.0.0"
+description: "IT incident triage and escalation environment for AI agent training and evaluation"
+author: "your-hf-username"
+tags:
+  - openenv
+  - incident-management
+  - devops
+  - triage
+interface: step

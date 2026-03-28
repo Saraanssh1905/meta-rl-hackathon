@@ -1,0 +1,18 @@
+[project]
+name = "incident-triage-env"
+version = "1.0.0"
+description = "IT incident triage OpenEnv environment"
+requires-python = ">=3.10"
+dependencies = [
+    "openenv-core",
+    "pydantic",
+]
+
+[project.optional-dependencies]
+server = [
+    "fastapi",
+    "uvicorn[standard]",
+]
+baseline = [
+    "openai",
+]
