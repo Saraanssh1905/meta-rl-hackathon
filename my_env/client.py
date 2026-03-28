@@ -1,6 +1,6 @@
 from openenv.core.env_client import EnvClient
 from openenv.core.client_types import StepResult
-from models import TriageAction, TriageObservation, TriageState
+from .models import TriageAction, TriageObservation, TriageState
 
 
 class IncidentTriageEnv(EnvClient[TriageAction, TriageObservation, TriageState]):

@@ -2,11 +2,11 @@ import random
 import uuid
 from openenv.core.env_server import Environment
 
-from server.scenarios import SCENARIOS, AVAILABLE_TEAMS
+from .scenarios import SCENARIOS, AVAILABLE_TEAMS
 
 # import sys, os
 # sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from models import TriageAction, TriageObservation, TriageState
+from ..models import TriageAction, TriageObservation, TriageState
 
 
 # Class-level storage so state persists across requests

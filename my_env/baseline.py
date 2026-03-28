@@ -6,8 +6,8 @@ from huggingface_hub import InferenceClient
 
 import sys
 sys.path.insert(0, os.path.dirname(__file__))
-from client import IncidentTriageEnv
-from models import TriageAction
+from .client import IncidentTriageEnv
+from .models import TriageAction
 
 
 def build_prompt(obs):
