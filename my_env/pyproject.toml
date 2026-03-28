@@ -14,7 +14,7 @@ server = [
     "uvicorn[standard]",
 ]
 baseline = [
-    "openai",
+    "huggingface-hub",
 ]
 [project.scripts]
 server = "server.app:main"
