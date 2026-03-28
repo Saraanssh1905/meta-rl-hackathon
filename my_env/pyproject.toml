@@ -16,3 +16,5 @@ server = [
 baseline = [
     "openai",
 ]
+[project.scripts]
+server = "server.app:main"
