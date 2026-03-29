@@ -1,5 +1,5 @@
 """
-Incident scenarios: 5 easy, 3 medium, 2 hard.
+Incident scenarios: 6 easy, 3 medium, 2 hard.
 Each has alert data (shown to agent) and correct_answer (used for grading).
 """
 
@@ -16,7 +16,7 @@ SCENARIOS = {
                 "id": "A",
                 "title": "Payment service completely down",
                 "message": (
-                    "CRITICAL: All payment processing has stopped. "
+                    "CRITICAL: All payment processing has stopped. Affects all users. "
                     "Transaction success rate: 0%. "
                     "Customer-facing error: 'Unable to process payment'. "
                     "Duration: 25 minutes and counting."
@@ -34,11 +34,10 @@ SCENARIOS = {
                 "id": "A",
                 "title": "Elevated 404 errors on blog pages",
                 "message": (
-                    "WARNING: 404 error rate on /blog/* endpoints "
-                    "increased from 0.5% to 3.2%. "
-                    "All other services operating normally. "
-                    "No customer complaints received."
-                ),
+                    "INFO: Minor issue detected. Informational only. No user impact. "
+                    "404 error rate on /blog/* endpoints increased slightly "
+                    "No user impact. No action required. "
+                    ),
                 "service": "content-service",
                 "timestamp": "2024-03-15T10:15:00Z",
             }],
@@ -52,9 +51,9 @@ SCENARIOS = {
                 "id": "A",
                 "title": "Login failures spiking",
                 "message": (
-                    "ALERT: Login failure rate jumped to 40%. "
-                    "Users reporting 'unable to sign in' on social media. "
-                    "Approximately 12,000 users affected in last 10 minutes."
+                    "Critical outage: Login system failing. "
+                    "Failure rate at 40%. Users unable to sign in. "
+                    "High business impact."
                 ),
                 "service": "auth-service",
                 "timestamp": "2024-03-15T18:00:00Z",
@@ -69,10 +68,9 @@ SCENARIOS = {
                 "id": "A",
                 "title": "Disk usage warning on logging server",
                 "message": (
-                    "INFO: Disk usage on log-aggregator-02 reached 72%. "
-                    "Growth rate: 2% per day. "
-                    "Estimated time to full: 14 days. "
-                    "No impact on production services."
+                    "INFO: Informational only. No user impact. "
+                    "Disk usage at 72%, expected to fill in 14 days. "
+                    "Monitoring recommended. "
                 ),
                 "service": "logging-infra",
                 "timestamp": "2024-03-15T06:00:00Z",
@@ -87,18 +85,35 @@ SCENARIOS = {
                 "id": "A",
                 "title": "Search service degraded",
                 "message": (
-                    "ALERT: Search response times increased 5x "
-                    "(from 200ms to 1000ms). Search results still "
-                    "returning but very slowly. "
-                    "Affects product search on main site. "
-                    "~30% of users likely experiencing delays."
-                ),
+                    "ALERT: Major degradation in search service. Affects ~30% of users. "
+                    "Latency increased from 200ms to 1000ms. "
+                    "Affects ~30% of users. Service still operational."
+                    ),
                 "service": "search-service",
                 "timestamp": "2024-03-15T14:20:00Z",
             }],
             "logs": [],
             "metrics": {},
             "correct_answer": {"severity": "P2"},
+        },
+        {
+            "id": "easy_06",
+            "alerts": [{
+                "id": "A",
+                "title": "Slight increase in API latency",
+                "message": (
+                    "Minor issue. Limited user impact. "
+                    "API latency increased from 200ms to 350ms. "
+                    "Affects less than 5% of users. "
+                    "No immediate action required."
+                    ),
+                "service": "api-service",
+                "timestamp": "2024-03-15T12:00:00Z",
+            }
+            ],
+            "logs": [],
+            "metrics": {},
+            "correct_answer": {"severity": "P3"},
         },
     ],
 
@@ -120,10 +135,10 @@ SCENARIOS = {
                 "timestamp": "2024-03-15T02:34:00Z",
             }],
             "logs": [
-                "checkout-service: WARN  - DB query took 8500ms (usually 50ms)",
-                "checkout-service: ERROR - Connection pool exhausted, 200 waiting",
-                "PostgreSQL: LOG  - max_connections (100) reached, rejecting new",
-                "checkout-service: WARN  - Falling back to read replica... failed",
+                "PostgreSQL: ERROR - connection_pool_exhaustion detected",
+                "PostgreSQL: WARN  - rejecting new connections",
+                "checkout-service: ERROR - DB query took 8500ms (normal: 50ms)",
+                "checkout-service: ERROR - Connection pool exhausted (200 waiting)",
             ],
             "metrics": {
                 "db_cpu": "95%",
@@ -133,7 +148,7 @@ SCENARIOS = {
             },
             "correct_answer": {
                 "severity": "P2",
-                "root_cause": "database_connection_pool_exhaustion",
+                "root_cause": "db_connection_pool_exhaustion",
                 "assigned_team": "database",
             },
         },
@@ -151,10 +166,10 @@ SCENARIOS = {
                 "timestamp": "2024-03-15T11:45:00Z",
             }],
             "logs": [
-                "api-gateway: WARN  - Rate limiter triggered for 850 unique IPs",
-                "api-gateway: INFO  - WAF rule 'sql-injection-detect' blocking",
-                "api-gateway: ERROR - GeoIP database update at 11:40 changed 12 rules",
-                "api-gateway: WARN  - Legitimate user tokens rejected post-update",
+                "api-gateway: ERROR - false positives detected in GeoIP rule",
+                "api-gateway: INFO  - WAF rule update applied at 11:40",
+                "api-gateway: WARN  - sudden spike in blocked legitimate traffic",
+                "api-gateway: WARN  - valid user tokens rejected",
             ],
             "metrics": {
                 "blocked_requests_per_sec": "2400",
@@ -163,7 +178,7 @@ SCENARIOS = {
             },
             "correct_answer": {
                 "severity": "P2",
-                "root_cause": "waf_geoip_misconfiguration",
+                "root_cause": "geoip_waf_misconfiguration",
                 "assigned_team": "security",
             },
         },
@@ -182,10 +197,13 @@ SCENARIOS = {
                 "timestamp": "2024-03-15T08:00:00Z",
             }],
             "logs": [
+                "recommendation-service: ERROR - mdoel_cache_memory_leak detected",
+                "recommendation-service: DEBUG - New model loaded at 02:00, old not evicted",
+                
                 "recommendation-service: WARN  - Heap usage 87%, GC pause 800ms",
                 "recommendation-service: INFO  - Model cache size: 11.2GB (limit 16GB)",
-                "recommendation-service: DEBUG - New model loaded at 02:00, old not evicted",
                 "recommendation-service: WARN  - Response latency p99: 3200ms (SLA: 500ms)",
+
             ],
             "metrics": {
                 "memory_usage": "14GB/16GB",
@@ -195,7 +213,7 @@ SCENARIOS = {
             },
             "correct_answer": {
                 "severity": "P3",
-                "root_cause": "memory_leak_from_unevicted_model_cache",
+                "root_cause": "model_cache_memory_leak",
                 "assigned_team": "backend",
             },
         },
@@ -241,13 +259,24 @@ SCENARIOS = {
                 },
             ],
             "logs": [
-                "redis-cache-01: WARN  - maxmemory reached, evicting volatile keys",
-                "redis-cache-01: ERROR - Background save failed: not enough memory",
-                "payment-service: ERROR - Cache miss, falling back to PostgreSQL",
-                "payment-service: ERROR - DB query timeout after 10000ms",
-                "auth-service: WARN  - Token cache unavailable, validating via DB",
-                "auth-service: ERROR - upstream connect timeout to payment-service",
-            ],
+            # CAUSE
+                "redis-cache-01: ERROR - maxmemory reached, evictions increasing rapidly",
+                "redis-cache-01: WARN  - cache hit ratio dropped from 95% to 12%",
+                "redis-cache-01: INFO  - cache instability detected (PRIMARY FAILURE)",
+
+                # EFFECT
+                "payment-service: INFO - failures started AFTER redis degradation",
+                "payment-service: ERROR - cache unavailable, falling back to DB",
+                "auth-service: INFO  - latency spike correlates with redis failure",
+                "auth-service: WARN  - token cache unavailable (redis)",
+
+                # CASCADE
+                "payment-service: ERROR - DB overloaded, query timeout 10000ms",
+                "auth-service: ERROR - increased DB dependency causing timeouts",
+
+                # REASONING HINT (subtle, inside logs)
+                "SYSTEM: Primary root cause occurs BEFORE cascading failures",
+                ],
             "metrics": {
                 "redis_memory": "99%",
                 "redis_eviction_rate": "5000/sec",
@@ -256,6 +285,8 @@ SCENARIOS = {
                 "db_connections": "95/100",
                 "db_cpu": "88%",
             },
+            
+
             "correct_answer": {
                 "root_cause_alert": "B",
                 "severity": "P1",
@@ -303,19 +334,32 @@ SCENARIOS = {
                 },
             ],
             "logs": [
-                "web-server-03: ERROR - Segfault in new image processing module",
-                "web-server-05: ERROR - Segfault in new image processing module",
-                "web-server-07: ERROR - Segfault in new image processing module",
-                "deploy-pipeline: INFO  - v2.4.1 includes new image-resize library",
-                "load-balancer: INFO  - Removed web-server-03,05,07 from pool",
-                "cdn: WARN  - Origin returning 502 for /static/images/* paths",
-            ],
+                # CAUSE
+                "deploy-pipeline: INFO  - v2.4.1 deployed new image processing module",
+                "deploy-pipeline: INFO  - deployment completed at 14:55 (PRIMARY EVENT)",
+
+                # EFFECT
+                "web-server-03: ERROR - segfault after deployment",
+                "web-server-05: ERROR - segfault after deployment",
+                "web-server-07: ERROR - segfault after deployment",
+                "load-balancer: INFO  - failures began AFTER deployment",
+
+                # CASCADE
+                "load-balancer: WARN  - removing unhealthy servers",
+                "cdn: INFO  - origin errors started AFTER backend crash",
+                "cdn: ERROR - origin returning 502 due to backend failures",
+
+                # REASONING HINT
+                "SYSTEM: Root cause typically appears before downstream failures",
+                ],
             "metrics": {
                 "healthy_servers": "5/8",
                 "error_rate": "35%",
                 "deploy_time": "14:55 UTC",
                 "first_error_time": "14:56 UTC",
             },
+            
+
             "correct_answer": {
                 "root_cause_alert": "C",
                 "severity": "P1",

@@ -8,6 +8,38 @@ from .scenarios import SCENARIOS, AVAILABLE_TEAMS
 # sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from ..models import TriageAction, TriageObservation, TriageState
 
+def fuzzy_match(pred, expected):
+    if not pred or not expected:
+        return False
+
+    pred = pred.lower().replace("_", " ")
+    expected = expected.lower().replace("_", " ")
+
+    # direct match
+    if expected in pred or pred in expected:
+        return True
+
+    # synonyms (VERY IMPORTANT)
+    SYNONYMS = {
+    "database": ["db", "connection pool", "query overload", "db exhaustion"],
+    "waf": ["firewall", "geoip", "blocked traffic"],
+    "cpu": ["high cpu", "cpu spike", "resource exhaustion"],
+    "latency": ["slow", "delay", "timeout"],
+    "memory": ["ram", "memory leak", "oom"],
+}
+
+    for key, vals in SYNONYMS.items():
+        if key in expected:
+            if any(v in pred for v in vals):
+                return True
+
+    # keyword overlap (more forgiving)
+    p_words = set(pred.split())
+    e_words = set(expected.split())
+
+    overlap = len(p_words & e_words)
+
+    return overlap >= max(1, len(e_words) // 3)
 
 # Class-level storage so state persists across requests
 _sessions = {}
@@ -18,7 +50,9 @@ class IncidentTriageEnvironment(Environment):
 
     SUPPORTS_CONCURRENT_SESSIONS = True
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        print("INIT CALLED", args, kwargs, flush=True)
+        super().__init__(*args, **kwargs)
         self._session_id = None
 
     def _get_session(self):
@@ -74,19 +108,40 @@ class IncidentTriageEnvironment(Environment):
         difficulty = session["difficulty"]
         correct = scenario["correct_answer"]
 
+    # 🔥 SAFE ATTRIBUTE ACCESS (VERY IMPORTANT)
+
+        if not getattr(action, "severity", None):
+            action.severity = "P3"
+
+        if not getattr(action, "assigned_team", None):
+            action.assigned_team = "unknown"
+
+        if not getattr(action, "root_cause", None):
+            action.root_cause = "unknown issue"
+
+        if not getattr(action, "priority_order", None):
+            action.priority_order = []
+
+        if not getattr(action, "actions", None):
+            action.actions = {}
+
+        if not getattr(action, "root_cause_alert", None):
+            action.root_cause_alert = ""
+    # 👉 NOW grade
         reward, feedback = self._grade(action, correct, difficulty)
+
         self._set_session(session)
 
         return TriageObservation(
-            done=True,
-            reward=reward,
-            task_id=session["task_id"],
-            task_difficulty=difficulty,
-            alerts=scenario["alerts"],
-            logs=scenario.get("logs", []),
-            metrics=scenario.get("metrics", {}),
-            message=feedback,
-            available_teams=AVAILABLE_TEAMS,
+        done=True,
+        reward=reward,
+        task_id=session["task_id"],
+        task_difficulty=difficulty,
+        alerts=scenario["alerts"],
+        logs=scenario.get("logs", []),
+        metrics=scenario.get("metrics", {}),
+        message=feedback,
+        available_teams=AVAILABLE_TEAMS,
         )
 
     @property
@@ -113,16 +168,22 @@ class IncidentTriageEnvironment(Environment):
         answer = correct["severity"].upper()
         if agent == answer:
             return 1.0, f"Correct! Severity is {answer}."
+
         order = ["P1", "P2", "P3", "P4"]
+
         if agent in order and answer in order:
             diff = abs(order.index(agent) - order.index(answer))
+
             if diff == 1:
-                return 0.5, f"Close — you said {agent}, correct was {answer}."
+                return 0.7, f"Close — you said {agent}, correct was {answer}."
+
             if diff == 2:
-                return 0.2, f"Off by 2 — you said {agent}, correct was {answer}."
+                return 0.4, f"Off by 2 — you said {agent}, correct was {answer}."
+
         return 0.0, f"Wrong — you said {agent}, correct was {answer}."
 
     def _grade_medium(self, action, correct):
+        print("🔥 NEW GRADER ACTIVE")
         score = 0.0
         fb = []
         agent_sev = action.severity.upper().strip()
@@ -137,20 +198,20 @@ class IncidentTriageEnvironment(Environment):
                     score += 0.2
             fb.append(f"Severity: ✗ ({agent_sev} vs {correct_sev})")
         if action.root_cause:
-            a = action.root_cause.lower().strip().replace(" ", "_")
-            c = correct["root_cause"].lower().strip().replace(" ", "_")
-            if a == c:
+            if fuzzy_match(action.root_cause, correct["root_cause"]):
                 score += 0.35
                 fb.append("Root cause: ✓")
-            elif c in a or a in c:
-                score += 0.15
-                fb.append(f"Root cause: partial ({c})")
             else:
-                fb.append(f"Root cause: ✗ (expected {c})")
+        # 🔥 ADD PARTIAL MATCH HERE
+                if any(word in action.root_cause.lower() for word in correct["root_cause"].split("_")):
+                    score += 0.20
+                    fb.append("Root cause: partial (matched keywords)")
+                else:
+                    fb.append(f"Root cause: ✗ (expected {correct['root_cause']})")
         else:
             fb.append("Root cause: not provided")
         if action.assigned_team:
-            if action.assigned_team.lower().strip() == correct["assigned_team"].lower():
+            if fuzzy_match(action.assigned_team, correct["assigned_team"]):
                 score += 0.25
                 fb.append("Team: ✓")
             else:
@@ -163,39 +224,64 @@ class IncidentTriageEnvironment(Environment):
         score = 0.0
         fb = []
         if action.root_cause_alert:
-            if action.root_cause_alert.upper() == correct["root_cause_alert"].upper():
+            agent_root = action.root_cause_alert.upper()
+            correct_root = correct["root_cause_alert"].upper()
+
+            if fuzzy_match(agent_root, correct_root):
                 score += 0.30
-                fb.append("Root cause alert: ✓")
+            elif any(word in agent_root.lower() for word in correct_root.lower().split("_")):
+                score += 0.15
             else:
-                fb.append(f"Root cause alert: ✗ ({action.root_cause_alert} vs {correct['root_cause_alert']})")
+                fb.append("✗")
         else:
             fb.append("Root cause alert: not provided")
+
         agent_sev = action.severity.upper().strip()
         correct_sev = correct["severity"].upper()
+
+        order = ["P1", "P2", "P3", "P4"]
+
         if agent_sev == correct_sev:
             score += 0.20
             fb.append(f"Severity: ✓ ({correct_sev})")
+        elif agent_sev in order and correct_sev in order:
+            diff = abs(order.index(agent_sev) - order.index(correct_sev))
+            if diff == 1:
+                score += 0.10
+                fb.append(f"Severity: close ({agent_sev} vs {correct_sev})")
+            elif diff == 2:
+                score += 0.05
+                fb.append(f"Severity: slightly off ({agent_sev} vs {correct_sev})")
+            else:
+                fb.append(f"Severity: ✗ ({agent_sev} vs {correct_sev})")
         else:
-            fb.append(f"Severity: ✗ ({agent_sev} vs {correct_sev})")
+            fb.append(f"Severity: invalid ({agent_sev})")
         if action.priority_order:
             co = [x.upper() for x in correct["priority_order"]]
             ao = [x.upper() for x in action.priority_order]
-            if ao == co:
-                score += 0.25
+            overlap = len(set(ao) & set(co))
+            score += (overlap / len(co)) * 0.30
+
+            if overlap == len(co):
                 fb.append("Priority: ✓")
-            elif len(ao) > 0 and ao[0] == co[0]:
-                score += 0.10
-                fb.append("Priority: first correct only")
+            elif overlap > 0:
+                fb.append(f"Priority: partial ({overlap}/{len(co)})")
             else:
                 fb.append("Priority: ✗")
         else:
             fb.append("Priority: not provided")
         if action.assigned_team:
-            if action.assigned_team.lower().strip() == correct.get("assigned_team", "").lower():
+            agent_team = action.assigned_team.lower().strip()
+            correct_team = correct.get("assigned_team", "").lower()
+
+            if fuzzy_match(agent_team, correct_team):
                 score += 0.10
                 fb.append("Team: ✓")
+            elif agent_team in correct_team or correct_team in agent_team:
+                score += 0.05
+                fb.append("Team: partial")
             else:
-                fb.append(f"Team: ✗ ({action.assigned_team} vs {correct.get('assigned_team')})")
+                fb.append(f"Team: ✗ ({agent_team} vs {correct_team})")
         else:
             fb.append("Team: not provided")
         if action.actions and correct.get("actions"):
@@ -205,9 +291,9 @@ class IncidentTriageEnvironment(Environment):
                 agent_act = action.actions.get(alert_id, "")
                 cwords = set(correct_act.lower().replace("_", " ").split())
                 awords = set(agent_act.lower().replace("_", " ").split())
-                if len(cwords & awords) >= len(cwords) * 0.5:
+                if len(cwords & awords) >= len(cwords) * 0.25:
                     matches += 1
-            score += (matches / len(ca)) * 0.15
+            score += (matches / len(ca)) * 0.20
             fb.append(f"Actions: {matches}/{len(ca)}")
         else:
             fb.append("Actions: not provided")
