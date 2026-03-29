@@ -127,6 +127,34 @@ class IncidentTriageEnvironment(Environment):
 
         if not getattr(action, "root_cause_alert", None):
             action.root_cause_alert = ""
+
+        # 🔥 INPUT SANITIZATION
+
+# Fix severity
+        if action.severity not in ["P1", "P2", "P3", "P4"]:
+            action.severity = "P3"
+
+# Fix priority_order
+        if not isinstance(action.priority_order, list):
+            action.priority_order = []
+
+# Fix actions
+        if not isinstance(action.actions, dict):
+            action.actions = {}
+
+# Normalize team names
+        if action.assigned_team:
+            team = action.assigned_team.lower()
+
+        TEAM_MAP = {
+        "infrastructure team": "infra",
+        "devops": "infra",
+        "security team": "security",
+        "backend team": "backend",
+        "database team": "database"
+    }
+
+        action.assigned_team = TEAM_MAP.get(team, team)
     # 👉 NOW grade
         reward, feedback = self._grade(action, correct, difficulty)
 

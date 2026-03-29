@@ -162,21 +162,73 @@ Priority = Redis → DB → Services
 # SAFE PARSER (UPGRADE)
 # -----------------------------
 def safe_parse_action(raw_text):
+    import json
+
+    # ---------------------------
+    # STEP 1: Extract JSON safely
+    # ---------------------------
     try:
         start = raw_text.find("{")
         end = raw_text.rfind("}") + 1
-        data = json.loads(raw_text[start:end])
 
-        return TriageAction(
-            severity=data.get("severity", "P3"),
-            root_cause=data.get("root_cause"),
-            assigned_team=data.get("assigned_team"),
-            root_cause_alert=data.get("root_cause_alert"),
-            priority_order=data.get("priority_order"),
-            actions=data.get("actions"),
-        )
+        if start != -1 and end != -1:
+            json_str = raw_text[start:end]
+            data = json.loads(json_str)
+        else:
+            raise ValueError("No JSON found")
+
     except Exception:
-        return TriageAction(severity="P3")  # fallback
+        data = {}
+
+    # ---------------------------
+    # STEP 2: Fix severity
+    # ---------------------------
+    severity = data.get("severity", "P3")
+    if severity not in ["P1", "P2", "P3", "P4"]:
+        severity = "P3"
+
+    # ---------------------------
+    # STEP 3: Fix priority_order
+    # ---------------------------
+    priority_order = data.get("priority_order")
+    if not isinstance(priority_order, list):
+        priority_order = []
+
+    # ---------------------------
+    # STEP 4: Fix actions
+    # ---------------------------
+    actions = data.get("actions")
+    if not isinstance(actions, dict):
+        actions = {}
+
+    # ---------------------------
+    # STEP 5: Normalize team
+    # ---------------------------
+    team = data.get("assigned_team", "")
+    if team:
+        team = team.lower()
+
+    TEAM_MAP = {
+        "infrastructure team": "infra",
+        "devops": "infra",
+        "security team": "security",
+        "backend team": "backend",
+        "database team": "database"
+    }
+
+    team = TEAM_MAP.get(team, team)
+
+    # ---------------------------
+    # STEP 6: Safe return
+    # ---------------------------
+    return TriageAction(
+        severity=severity,
+        root_cause=data.get("root_cause", "unknown issue"),
+        assigned_team=team,
+        root_cause_alert=data.get("root_cause_alert", ""),
+        priority_order=priority_order,
+        actions=actions,
+    )
 
 
 # -----------------------------
@@ -209,7 +261,7 @@ async def run_inference(base_url):
                                 temperature=0,
                                 max_tokens=300,
                             ),
-                            timeout=10,
+                            timeout=15,
                         )
 
                         raw = completion.choices[0].message.content or ""
@@ -221,11 +273,25 @@ async def run_inference(base_url):
 
                     # 🔥 fallback if empty or bad
                     if not raw or not raw.strip() or "{" not in raw:
-                        raw = '{"severity": "P3"}'
+                        raw = json.dumps({
+                        "severity": "P3",
+                        "root_cause": "unknown issue",
+                        "assigned_team": "backend",
+                        "root_cause_alert": "",
+                        "priority_order": [],
+                        "actions": {}
+                    })
 
                 except Exception as e:
                     print(f"  ep{ep}: model failed → fallback | {e}")
-                    raw = '{"severity": "P3"}'
+                    raw = json.dumps({
+                        "severity": "P3",
+                        "root_cause": "unknown issue",
+                        "assigned_team": "backend",
+                        "root_cause_alert": "",
+                        "priority_order": [],
+                        "actions": {}
+                        })
                     failures += 1
                 action = safe_parse_action(raw)
 
