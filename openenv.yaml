@@ -1,0 +1,28 @@
+name: incident-triage
+version: "1.0.0"
+
+description: >
+  A realistic IT incident triage environment simulating on-call engineering workflows.
+  Agents must analyze alerts, logs, and metrics to determine severity, root cause,
+  ownership, and remediation actions across easy, medium, and hard scenarios.
+
+author: "Saraanssh1905"   
+
+tags:
+  - openenv
+  - incident-management
+  - devops
+  - triage
+  - sre
+  - alert-analysis
+
+interface: step
+
+# Optional but useful metadata
+metadata:
+  difficulty_levels:
+    - easy
+    - medium
+    - hard
+  task_type: classification + reasoning + planning
+  domain: site-reliability-engineering

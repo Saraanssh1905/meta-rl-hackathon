@@ -4,8 +4,8 @@ import argparse
 import asyncio
 from openai import OpenAI
 
-from .client import IncidentTriageEnv
-from .models import TriageAction
+from client import IncidentTriageEnv
+from models import TriageAction
 
 
 # -----------------------------
@@ -16,13 +16,18 @@ API_KEY = os.getenv("HF_TOKEN") or os.getenv("API_KEY")
 MODEL_NAME = os.getenv("MODEL_NAME", "meta-llama/Llama-3.1-8B-Instruct")
 
 if not API_KEY:
-    raise ValueError("Set HF_TOKEN (HuggingFace token) before running")
+    print(" No API key found. Running in mock mode.")
 
 
-client = OpenAI(
-    base_url=API_BASE_URL,
-    api_key=API_KEY,
-)
+client = None
+
+if API_KEY:
+    client = OpenAI(
+        base_url=API_BASE_URL,
+        api_key=API_KEY,
+    )
+else:
+    print("⚠️ No API key found. Running in fallback mode.")
 
 def build_prompt(obs):
     """Build an LLM prompt from the observation."""
@@ -140,7 +145,7 @@ Priority = Redis → DB → Services
 
     else:
         prompt += """
-    O"Output ONLY valid JSON. Do not include explanation outside JSON."
+    "Output ONLY valid JSON. Do not include explanation outside JSON."
 
     Format:
     {
@@ -182,6 +187,7 @@ async def run_inference(base_url):
 
     for difficulty in ["easy", "medium", "hard"]:
         scores = []
+        failures=0
         print(f"\n{'='*50}")
         print(f"  {difficulty.upper()} TASKS")
         print(f"{'='*50}")
@@ -194,19 +200,33 @@ async def run_inference(base_url):
                 prompt = build_prompt(obs)
 
                 try:
-                    completion = client.chat.completions.create(
-                        model=MODEL_NAME,
-                        messages=[{"role": "user", "content": prompt}],
-                        temperature=0,
-                        max_tokens=300,
-                    )
+                    if client:
+                        completion = await asyncio.wait_for(
+                            asyncio.to_thread(
+                                client.chat.completions.create,
+                                model=MODEL_NAME,
+                                messages=[{"role": "user", "content": prompt}],
+                                temperature=0,
+                                max_tokens=300,
+                            ),
+                            timeout=10,
+                        )
 
-                    raw = completion.choices[0].message.content or ""
+                        raw = completion.choices[0].message.content or ""
+
+                        print(f"RAW MODEL OUTPUT: {raw}")
+
+                    else:
+                        raw = '{"severity": "P3"}'
+
+                    # 🔥 fallback if empty or bad
+                    if not raw or not raw.strip() or "{" not in raw:
+                        raw = '{"severity": "P3"}'
 
                 except Exception as e:
                     print(f"  ep{ep}: model failed → fallback | {e}")
-                    raw = ""
-
+                    raw = '{"severity": "P3"}'
+                    failures += 1
                 action = safe_parse_action(raw)
 
                 step_result = await env.step(action)
@@ -218,9 +238,10 @@ async def run_inference(base_url):
                     f"| {step_result.observation.message[:80]}"
                 )
 
-        avg = sum(scores) / len(scores)
+        avg = round(sum(scores) / len(scores), 2)
         all_results[difficulty] = {"scores": scores, "average": avg}
         print(f"\n  [{difficulty.upper()}] Average: {avg:.2f}")
+        print(f"  Failures: {failures}/{len(scores)}")
 
     print(f"\n{'='*50}")
     print("FINAL RESULTS SUMMARY")

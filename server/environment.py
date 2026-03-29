@@ -2,11 +2,11 @@ import random
 import uuid
 from openenv.core.env_server import Environment
 
-from .scenarios import SCENARIOS, AVAILABLE_TEAMS
+from server.scenarios import SCENARIOS, AVAILABLE_TEAMS
 
 # import sys, os
 # sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from ..models import TriageAction, TriageObservation, TriageState
+from models import TriageAction, TriageObservation, TriageState
 
 def fuzzy_match(pred, expected):
     if not pred or not expected:
@@ -129,6 +129,23 @@ class IncidentTriageEnvironment(Environment):
             action.root_cause_alert = ""
     # 👉 NOW grade
         reward, feedback = self._grade(action, correct, difficulty)
+
+# 🔥 Penalty for missing root cause
+        if action.root_cause.lower() in ["unknown issue","unknown",""]:
+            reward -= 0.05
+        if action.assigned_team.lower() in ["unknown", ""]:
+            reward -= 0.03
+        if action.severity.upper() not in ["P1", "P2", "P3", "P4"]:
+            reward -= 0.05
+        if difficulty == "hard" and not action.actions:
+            reward -= 0.05
+        if reward is None:
+            reward = 0.0
+# Optional: prevent negative or >1 scores
+        reward = max(0.0, min(1.0, reward))
+
+# Optional: better feedback
+        feedback = f"Score: {reward} | {feedback}"
 
         self._set_session(session)
 
