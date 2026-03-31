@@ -30,7 +30,8 @@ problem.
 
 ### Repository Structure Screenshot
 
-<img width="1167" height="916" alt="image" src="https://github.com/user-attachments/assets/8e7c06e1-6af2-46ab-9744-44785cf639b8" />
+<img width="417" height="809" alt="image" src="https://github.com/user-attachments/assets/b01ee7bb-5eef-48df-9aa6-ecc983c2cb87" />
+
 
 
 ------------------------------------------------------------------------
@@ -95,7 +96,8 @@ Alert + logs + metrics → severity + root cause + team
 
 Multiple alerts → full triage
 
-<img width="676" height="399" alt="image" src="https://github.com/user-attachments/assets/825e6115-f252-4461-a9ce-273f54271adf" />
+<img width="920" height="856" alt="image" src="https://github.com/user-attachments/assets/e1d94aa3-c6ad-4331-9d13-23b8f0b387d3" />
+
 
 
 
