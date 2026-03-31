@@ -163,3 +163,4 @@ Evaluated using `meta-llama/Llama-3.1-8B-Instruct` via HuggingFace Inference API
 | Hard | Llama-3.1-8B-Instruct | 0.17 |
 
 The easy score reflects that severity classification is straightforward for most scenarios but the model occasionally misclassifies by one level. The medium score shows the model reliably identifies severity and team but struggles with exact root cause naming. The hard score reflects the genuine difficulty of cascading failure analysis — identifying the true root cause among multiple simultaneous alerts requires multi-step causal reasoning that smaller models find challenging.
+<img width="396" height="794" alt="image" src="https://github.com/user-attachments/assets/3ef1fcfb-c950-422d-a4af-620b030cc7f3" />
