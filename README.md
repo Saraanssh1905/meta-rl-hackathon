@@ -30,7 +30,8 @@ problem.
 
 ### Repository Structure Screenshot
 
-\[ADD REPO STRUCTURE SCREENSHOT HERE\]
+<img width="1167" height="916" alt="image" src="https://github.com/user-attachments/assets/8e7c06e1-6af2-46ab-9744-44785cf639b8" />
+
 
 ------------------------------------------------------------------------
 
@@ -76,7 +77,8 @@ done = True
 
 Single alert → classify severity
 
-\[ADD EASY TASK SCREENSHOT\]
+<img width="636" height="214" alt="image" src="https://github.com/user-attachments/assets/270e119e-25cc-46b0-867a-efda5b5f9237" />
+
 
 ------------------------------------------------------------------------
 
@@ -84,7 +86,8 @@ Single alert → classify severity
 
 Alert + logs + metrics → severity + root cause + team
 
-\[ADD MEDIUM TASK SCREENSHOT\]
+<img width="676" height="399" alt="image" src="https://github.com/user-attachments/assets/aba25dfe-9787-4b63-a13b-61dc7d810fbc" />
+
 
 ------------------------------------------------------------------------
 
@@ -92,7 +95,9 @@ Alert + logs + metrics → severity + root cause + team
 
 Multiple alerts → full triage
 
-\[ADD HARD TASK SCREENSHOT\]
+<img width="676" height="399" alt="image" src="https://github.com/user-attachments/assets/825e6115-f252-4461-a9ce-273f54271adf" />
+
+
 
 ------------------------------------------------------------------------
 
@@ -115,7 +120,8 @@ uvicorn server.app:app --reload
 
 Open: http://127.0.0.1:8000/docs
 
-\[ADD FASTAPI SCREENSHOT\]
+<img width="1167" height="916" alt="image" src="https://github.com/user-attachments/assets/3a68cd67-334c-44d9-928b-02fdf4fe5b3c" />
+
 
 ------------------------------------------------------------------------
 
@@ -153,6 +159,12 @@ python inference.py --base-url http://localhost:8000
 ## Live Demo
 
 https://huggingface.co/spaces/Saraanssh1905/incident-triage
+
+<img width="676" height="399" alt="image" src="https://github.com/user-attachments/assets/b71011a1-82ad-4f49-99fc-2cae7360a1d5" />
+
+<img width="676" height="399" alt="image" src="https://github.com/user-attachments/assets/a63307ed-62b1-43eb-a81c-6823ca88489f" />
+
+
 
 ------------------------------------------------------------------------
 
