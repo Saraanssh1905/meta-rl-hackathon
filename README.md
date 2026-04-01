@@ -45,14 +45,7 @@ done = True( 1 step per episode)
 <img width="886" height="472" alt="image" src="https://github.com/user-attachments/assets/f4de333b-94f7-4e37-a7fa-25ac2758557e" />
 
 
-  Field              Type              Required      Description
-  ------------------ ----------------- ------------- --------------------------
-  severity           str               Yes           P1 / P2 / P3 / P4
-  root_cause         str               Medium/Hard   Snake_case issue
-  assigned_team      str               Medium/Hard   backend / database / etc
-  root_cause_alert   str               Hard          A / B / C
-  priority_order     List\[str\]       Hard          Order of resolution
-  actions            Dict\[str,str\]   Hard          Fix per alert
+
 
 ------------------------------------------------------------------------
 
@@ -61,14 +54,7 @@ done = True( 1 step per episode)
 <img width="830" height="764" alt="image" src="https://github.com/user-attachments/assets/8a2a3e80-9497-4514-b338-028adc319930" />
 
 
-  Field             Type          Description
-  ----------------- ------------- -------------------------
-  alerts            List          Alert objects
-  logs              List\[str\]   System logs
-  metrics           Dict          System metrics
-  task_difficulty   str           easy / medium / hard
-  message           str           Instructions / feedback
-  available_teams   List\[str\]   Valid teams
+
 
 ------------------------------------------------------------------------
 
@@ -77,6 +63,7 @@ done = True( 1 step per episode)
 ### Task 1 --- Severity Classification (Easy)
 
 Single alert → classify severity. No logs or metrics provided — the agent must reason purely from alert text.
+
 6 scenarios covering all severity levels:
 
 <img width="873" height="411" alt="image" src="https://github.com/user-attachments/assets/043884b0-91f3-42fa-a17c-a6c9ef559d1f" />
@@ -98,6 +85,7 @@ Grading:
 Alert + logs + metrics → severity + root cause + team
 
 3 scenarios:
+
 <img width="883" height="240" alt="image" src="https://github.com/user-attachments/assets/1562984a-69ff-4960-ade3-81e6b5a865be" />
 
 Results:
