@@ -10,9 +10,10 @@ The three difficulty levels mirror how real incidents present themselves — fro
 
 ------------------------------------------------------------------------
 
-## Repository Structure
+## 📂 Repository Structure
 
-<pre> ```text meta-rl-hackathon/ │ ├── server/ │ ├── __init__.py # Makes 'server' a Python package │ ├── app.py # FastAPI app — OpenEnv server entry point (creates API endpoints) │ ├── environment.py # Core simulation logic (reset, step, reward grading) │ ├── requirements.txt # Python dependencies required for the server (used in Docker) │ └── scenarios.py # All predefined incident scenarios and AVAILABLE_TEAMS │ ├── Dockerfile # Container definition for HF Spaces deployment ├── README.md # Main project documentation (overview, setup, usage) ├── client.py # OpenEnv client wrapper to interact with the environment ├── inference.py # Baseline inference script using OpenAI API ├── models.py # Pydantic models (Action, Observation, State) ├── openenv.yaml # OpenEnv manifest/config (required for validation) ├── pyproject.toml # Project metadata and dependency configuration ├── requirements.txt # Global dependencies (for local dev / general use) └── uv.lock # Locked dependency versions for reproducibility ``` </pre>
+
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/e3bf75e7-c037-4eb6-861d-79fb16e6b05b" />
 
 
 ### 🧩 Architecture Overview
