@@ -290,9 +290,9 @@ python inference.py --base-url http://localhost:8000
 
 https://huggingface.co/spaces/Saraanssh1905/incident-triage
 
-<img width="676" height="399" alt="image" src="https://github.com/user-attachments/assets/b71011a1-82ad-4f49-99fc-2cae7360a1d5" />
+<img width="1919" height="974" alt="image" src="https://github.com/user-attachments/assets/9eba444c-0b20-48a3-9219-ac3c75633bcc" />
 
-<img width="676" height="399" alt="image" src="https://github.com/user-attachments/assets/a63307ed-62b1-43eb-a81c-6823ca88489f" />
+
 
 
 
