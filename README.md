@@ -7,6 +7,55 @@ Modern production systems fail in complex, cascading ways.
 When incidents occur, on-call engineers must rapidly assess severity, identify root causes, route issues to the correct teams, and take recovery actions. This environment simulates that workflow as a reinforcement learning problem — grounded in real production failure patterns like database connection pool exhaustion, WAF/GeoIP misconfigurations, memory leaks from unevicted model caches, Redis cascades, and bad deployments triggering segfaults across backend servers.
 The three difficulty levels mirror how real incidents present themselves — from a single unambiguous alert to a multi-service cascading failure where the root cause is buried two layers deep.
 
+------------------------------------------------------------------------
+
+## 💡 Why We Built This
+
+We wanted to move beyond toy RL environments and simulate something that actually happens in real systems.
+
+During our research, we noticed that most OpenEnv submissions focus on games or abstract tasks. However, incident triage in production systems is a real, high-stakes decision-making problem where partial correctness matters.
+
+This environment is designed to reflect how on-call engineers think:
+- Not all signals are clear
+- Multiple components can fail simultaneously
+- The “correct” answer often has degrees of correctness
+
+Our goal was to build something that:
+- Feels realistic
+- Provides dense reward signals
+- Challenges even strong LLMs on reasoning, not just pattern matching
+
+------------------------------------------------------------------------
+
+## 🧠 Design Decisions
+
+### Single-Step Episodes
+We intentionally designed each episode to be a single step.
+
+Reason:
+- Focus on decision quality rather than exploration
+- Makes evaluation deterministic and reproducible
+- Aligns with real-world triage (you usually act once, not in loops)
+
+### Weighted Reward Components
+We assigned different weights to each component:
+
+- Severity → high importance
+- Root cause → slightly less
+- Team → least
+
+This reflects real-world impact:
+Getting severity wrong is more costly than assigning to the wrong team.
+
+### Scenario Design
+Scenarios were inspired by real production issues:
+- Database connection exhaustion
+- WAF misconfigurations
+- Cache cascades
+- Bad deployments
+
+We intentionally added **noise and misleading signals** in hard tasks to simulate real debugging complexity.
+
 
 ------------------------------------------------------------------------
 
@@ -37,6 +86,13 @@ done = True(1 step per episode)
 ------------------------------------------------------------------------
 
 ## Action Space
+
+The agent outputs a structured triage decision depending on difficulty:
+
+- Easy → only severity
+- Medium → severity + root cause + team
+- Hard → full triage (ordering + actions)
+
 
 <img width="886" height="472" alt="image" src="https://github.com/user-attachments/assets/f4de333b-94f7-4e37-a7fa-25ac2758557e" />
 
@@ -130,7 +186,7 @@ The environment uses a **dense, structured reward function (0.0 → 1.0)** that 
 both **positive reinforcement for correct reasoning** and **implicit negative marking for mistakes**.
 
 Rather than binary success/failure, the agent is evaluated across multiple dimensions,
-ensuring meaningful feedback throughout the trajectory.
+so the agent gets useful feedback instead of just pass/fail.
 
 ---
 
@@ -169,6 +225,8 @@ R = 0.30·RootCauseAlert + 0.20·Severity + 0.25·PriorityOrder + 0.10·Team + 0
 
 - Priority → full or partial (first correct)
 - Actions → keyword overlap scoring
+
+> 💡 Note: Even GPT-level models struggle with the hard tasks due to misleading signals.
 
 ---
 
@@ -239,6 +297,30 @@ where environments act as evaluators rather than learners.
 
 ------------------------------------------------------------------------
 
+## ⚠️ Limitations
+
+- The environment uses predefined scenarios (not dynamic generation)
+- Root cause matching is string-based (not semantic understanding)
+- Single-step episodes limit long-horizon learning
+
+These were conscious trade-offs to ensure:
+- Deterministic evaluation
+- Fast inference
+- Simplicity for hackathon constraints
+
+------------------------------------------------------------------------
+
+## 🚀 Future Improvements
+
+- Multi-step episodes with evolving system state
+- More diverse and noisy real-world scenarios
+- Better semantic evaluation for actions
+- Integration with real observability data formats
+
+This would make the environment closer to real production systems.
+
+------------------------------------------------------------------------
+
 ## Setup (Run commands on git bash terminal)
 
 ### Install
@@ -298,8 +380,13 @@ https://huggingface.co/spaces/Saraanssh1905/incident-triage
 
 ------------------------------------------------------------------------
 
-## Team Neural Nexus
+## 👥 Team Contributions
 
--   Omkar Iyer - Evaluation, Deployment\
--   Saraanssh Mehra - Environment Design, Backend
+- **Omkar Iyer**
+  - Designed evaluation logic and reward shaping
+  - Worked on deployment and validation
+
+- **Saraanssh Mehra**
+  - Built environment simulation and scenarios
+  - Implemented backend and API integration
 
