@@ -4,12 +4,9 @@
 
 Modern production systems fail in complex, cascading ways.
 
-When incidents occur, on-call engineers must: - Assess severity
-quickly - Identify root causes - Route issues to correct teams - Take
-recovery actions
+When incidents occur, on-call engineers must rapidly assess severity, identify root causes, route issues to the correct teams, and take recovery actions. This environment simulates that workflow as a reinforcement learning problem — grounded in real production failure patterns like database connection pool exhaustion, WAF/GeoIP misconfigurations, memory leaks from unevicted model caches, Redis cascades, and bad deployments triggering segfaults across backend servers.
+The three difficulty levels mirror how real incidents present themselves — from a single unambiguous alert to a multi-service cascading failure where the root cause is buried two layers deep.
 
-This environment simulates that workflow as a reinforcement learning
-problem.
 
 ------------------------------------------------------------------------
 
@@ -36,7 +33,7 @@ problem.
 
 reset() → observation\
 step(action) → reward + feedback\
-done = True( 1 step per episode)
+done = True(1 step per episode)
 
 ------------------------------------------------------------------------
 
@@ -60,7 +57,7 @@ done = True( 1 step per episode)
 
 ## Tasks
 
-### Task 1 --- Severity Classification (Easy)
+### Task 1 - Severity Classification (Easy)
 
 Single alert → classify severity. No logs or metrics provided — the agent must reason purely from alert text.
 
@@ -80,7 +77,7 @@ Grading:
 
 ------------------------------------------------------------------------
 
-### Task 2 --- Diagnose & Assign (Medium)
+### Task 2 - Diagnose & Assign (Medium)
 
 Alert + logs + metrics → severity + root cause + team
 
@@ -100,7 +97,7 @@ Grading:
 
 ------------------------------------------------------------------------
 
-### Task 3 --- Cascading Failure (Hard)
+### Task 3 - Cascading Failure (Hard)
 
 Multiple alerts +logs+metrics → full triage decision.
 
@@ -108,11 +105,11 @@ Multiple alerts +logs+metrics → full triage decision.
 
 <img width="868" height="253" alt="image" src="https://github.com/user-attachments/assets/48afbb64-3dd6-4bdf-85ac-5a5470bfde99" />
 
-Root cause: B (Redis failed first). Correct: root cause B, P1, priority [B, A, C], increase Redis memory — downstream services recover automatically.
+
 
 <img width="873" height="255" alt="image" src="https://github.com/user-attachments/assets/db2d8dc4-4bd9-40d3-acb5-970a2d78046a" />
 
-Root cause: C (deployment introduced a segfaulting module at 14:55). Correct: root cause C, P1, priority [C, B, A], rollback v2.4.1 — LB and CDN recover automatically.
+
 
 Results:
 
