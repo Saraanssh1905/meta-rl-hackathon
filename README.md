@@ -12,17 +12,17 @@ The three difficulty levels mirror how real incidents present themselves — fro
 
 ## Repository Structure
 
-    meta-rl-hackathon/
+    meta-rl-hackathon/ 
     ├── server/
-    │   ├── app.py
-    │   ├── environment.py
-    │   ├── scenarios.py
-    │   └── requirements.txt
-    ├── models.py
-    ├── client.py
-    ├── inference.py
-    ├── Dockerfile
-    ├── openenv.yaml
+    │   ├── app.py              # FastAPI app, OpenEnv server entry point
+    │   ├── environment.py      # IncidentTriageEnvironment — reset(), step(), _grade()
+    │   ├── scenarios.py        # All scenario definitions and AVAILABLE_TEAMS
+    │   └── requirements.txt    # Server dependencies
+    ├── models.py               # TriageAction, TriageObservation, TriageState
+    ├── client.py               # IncidentTriageEnv async client wrapper
+    ├── inference.py            # Baseline evaluation script
+    ├── Dockerfile              # Docker build for HF Spaces deployment
+    ├── openenv.yaml            # OpenEnv config
     └── README.md
 
 ------------------------------------------------------------------------
@@ -280,7 +280,6 @@ openenv push --repo-id `<your-username>`{=html}/incident-triage
 
 ------------------------------------------------------------------------
 
-=======
 ## Inference
 
 export HF_TOKEN=your_token\
