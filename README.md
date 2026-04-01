@@ -25,6 +25,33 @@ Our goal was to build something that:
 - Provides dense reward signals
 - Challenges even strong LLMs on reasoning, not just pattern matching
 
+
+------------------------------------------------------------------------
+
+## 📂 Repository Structure
+
+
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/e3bf75e7-c037-4eb6-861d-79fb16e6b05b" />
+
+
+### 🧩 Architecture Overview
+
+- `server/` → Backend simulation (what the agent interacts with)
+- `models.py` → Data contracts between agent and environment
+- `client.py` → Interface used by agents to communicate with the env
+- `inference.py` → Baseline agent using an LLM
+- `Dockerfile` → Deployment layer (HF Spaces)
+
+------------------------------------------------------------------------
+
+## Environment Design
+
+### Episode Flow
+
+reset() → observation\
+step(action) → reward + feedback\
+done = True(1 step per episode)
+
 ------------------------------------------------------------------------
 
 ## 🧠 Design Decisions
@@ -55,33 +82,6 @@ Scenarios were inspired by real production issues:
 - Bad deployments
 
 We intentionally added **noise and misleading signals** in hard tasks to simulate real debugging complexity.
-
-
-------------------------------------------------------------------------
-
-## 📂 Repository Structure
-
-
-<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/e3bf75e7-c037-4eb6-861d-79fb16e6b05b" />
-
-
-### 🧩 Architecture Overview
-
-- `server/` → Backend simulation (what the agent interacts with)
-- `models.py` → Data contracts between agent and environment
-- `client.py` → Interface used by agents to communicate with the env
-- `inference.py` → Baseline agent using an LLM
-- `Dockerfile` → Deployment layer (HF Spaces)
-
-------------------------------------------------------------------------
-
-## Environment Design
-
-### Episode Flow
-
-reset() → observation\
-step(action) → reward + feedback\
-done = True(1 step per episode)
 
 ------------------------------------------------------------------------
 
