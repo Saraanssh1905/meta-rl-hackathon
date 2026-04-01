@@ -169,11 +169,7 @@ R = 0.4·Severity + 0.35·RootCause + 0.25·Team
 
 Total reward:
 
-R = 0.30·RootCauseAlert  
-  + 0.20·Severity  
-  + 0.25·PriorityOrder  
-  + 0.10·Team  
-  + 0.15·Actions  
+R = 0.30·RootCauseAlert + 0.20·Severity + 0.25·PriorityOrder + 0.10·Team + 0.15·Actions  
 
 - Priority → full or partial (first correct)
 - Actions → keyword overlap scoring
@@ -223,25 +219,31 @@ Each function:
 
 ---
 
-## 🚀 Why This Reward Design is Strong
+## 🔁 Learning Paradigm
 
-- ✅ **Dense reward signal** → guides learning at every step  
-- ✅ **Partial credit system** → rewards progress, not just success  
-- ✅ **Implicit penalties** → discourages wrong or incomplete outputs  
-- ✅ **Multi-dimensional evaluation** → tests reasoning, not guessing  
-- ✅ **Deterministic grading** → reproducible and fair  
+This environment does **not perform learning internally**.
 
-This ensures that agents must demonstrate:
-- Accurate classification  
-- Correct root cause reasoning  
-- Proper prioritization  
-- Actionable decision-making  
+- Each episode is **independent**
+- The environment is **stateless across episodes**
+- The agent receives a **single-step reward per episode**
 
-rather than relying on shortcuts or random guesses.
+Learning occurs **externally**, where:
+
+- A training algorithm (e.g., RL, GRPO, fine-tuning)
+- Uses the reward signal returned by the environment
+- To iteratively improve the agent’s policy across episodes
+
+The role of this environment is to provide:
+- A **high-quality reward signal**
+- A **deterministic evaluation framework**
+- A **realistic decision-making task**
+
+This design aligns with standard reinforcement learning pipelines,
+where environments act as evaluators rather than learners.
 
 ------------------------------------------------------------------------
 
-## Setup
+## Setup (Run commands on git bash terminal)
 
 ### Install
 
