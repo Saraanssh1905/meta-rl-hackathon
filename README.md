@@ -31,7 +31,8 @@ Our goal was to build something that:
 ## 📂 Repository Structure
 
 
-<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/e3bf75e7-c037-4eb6-861d-79fb16e6b05b" />
+<img width="1024" height="665" alt="image" src="https://github.com/user-attachments/assets/61fb4cf8-c7d8-44bb-84d4-b186ade81734" />
+
 
 
 ### 🧩 Architecture Overview
