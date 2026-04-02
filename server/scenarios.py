@@ -6,9 +6,9 @@ Each has alert data (shown to agent) and correct_answer (used for grading).
 AVAILABLE_TEAMS = ["backend", "frontend", "database", "network", "security", "devops"]
 
 SCENARIOS = {
-    # ═══════════════════════════════════════════════════════════════
+    
     #  EASY — single alert, classify severity only
-    # ═══════════════════════════════════════════════════════════════
+    
     "easy": [
         {
             "id": "easy_01",
@@ -117,9 +117,9 @@ SCENARIOS = {
         },
     ],
 
-    # ═══════════════════════════════════════════════════════════════
+    
     #  MEDIUM — alert + logs + metrics → severity + root cause + team
-    # ═══════════════════════════════════════════════════════════════
+    
     "medium": [
         {
             "id": "medium_01",
@@ -219,9 +219,9 @@ SCENARIOS = {
         },
     ],
 
-    # ═══════════════════════════════════════════════════════════════
+    
     #  HARD — multiple alerts, cascading failure
-    # ═══════════════════════════════════════════════════════════════
+    
     "hard": [
         {
             "id": "hard_01",
@@ -259,7 +259,7 @@ SCENARIOS = {
                 },
             ],
             "logs": [
-            # CAUSE
+                # CAUSE
                 "redis-cache-01: ERROR - maxmemory reached, evictions increasing rapidly",
                 "redis-cache-01: WARN  - cache hit ratio dropped from 95% to 12%",
                 "redis-cache-01: INFO  - cache instability detected (PRIMARY FAILURE)",

@@ -8,9 +8,9 @@ from client import IncidentTriageEnv
 from models import TriageAction
 
 
-# -----------------------------
+
 # ENV CONFIG (MANDATORY)
-# -----------------------------
+
 API_BASE_URL = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
 API_KEY = os.getenv("HF_TOKEN") or os.getenv("API_KEY")
 MODEL_NAME = os.getenv("MODEL_NAME", "meta-llama/Llama-3.1-8B-Instruct")
@@ -27,7 +27,7 @@ if API_KEY:
         api_key=API_KEY,
     )
 else:
-    print("⚠️ No API key found. Running in fallback mode.")
+    print(" No API key found. Running in fallback mode.")
 
 def build_prompt(obs):
     """Build an LLM prompt from the observation."""
@@ -117,12 +117,13 @@ Then:
 Root cause = Redis  
 Priority = Redis → DB → Services
 """
-    # 🔥 Add hint BEFORE instructions
+    # hint BEFORE instructions
     if hint_text:
         prompt += f"\nHINT: {hint_text}\n"
         prompt += "Use this hint to identify the root cause.\n"
 
-    # 🔥 NOW add difficulty-specific instructions
+    # difficulty-specific instructions
+
     if difficulty == "easy":
         prompt += """
     "Output ONLY valid JSON. Do not include explanation outside JSON."
@@ -158,15 +159,13 @@ Priority = Redis → DB → Services
     """
     return prompt
 
-# -----------------------------
-# SAFE PARSER (UPGRADE)
-# -----------------------------
+
 def safe_parse_action(raw_text):
     import json
 
-    # ---------------------------
+    
     # STEP 1: Extract JSON safely
-    # ---------------------------
+    
     try:
         start = raw_text.find("{")
         end = raw_text.rfind("}") + 1
@@ -180,30 +179,30 @@ def safe_parse_action(raw_text):
     except Exception:
         data = {}
 
-    # ---------------------------
+    
     # STEP 2: Fix severity
-    # ---------------------------
+    
     severity = data.get("severity", "P3")
     if severity not in ["P1", "P2", "P3", "P4"]:
         severity = "P3"
 
-    # ---------------------------
+    
     # STEP 3: Fix priority_order
-    # ---------------------------
+    
     priority_order = data.get("priority_order")
     if not isinstance(priority_order, list):
         priority_order = []
 
-    # ---------------------------
+    
     # STEP 4: Fix actions
-    # ---------------------------
+    
     actions = data.get("actions")
     if not isinstance(actions, dict):
         actions = {}
 
-    # ---------------------------
+    
     # STEP 5: Normalize team
-    # ---------------------------
+    
     team = data.get("assigned_team", "")
     if team:
         team = team.lower()
@@ -218,9 +217,9 @@ def safe_parse_action(raw_text):
 
     team = TEAM_MAP.get(team, team)
 
-    # ---------------------------
+    
     # STEP 6: Safe return
-    # ---------------------------
+    
     return TriageAction(
         severity=severity,
         root_cause=data.get("root_cause", "unknown issue"),
@@ -231,9 +230,9 @@ def safe_parse_action(raw_text):
     )
 
 
-# -----------------------------
+
 # MAIN RUN
-# -----------------------------
+
 async def run_inference(base_url):
     all_results = {}
 
@@ -271,7 +270,8 @@ async def run_inference(base_url):
                     else:
                         raw = '{"severity": "P3"}'
 
-                    # 🔥 fallback if empty or bad
+                    # fallback if empty or bad
+
                     if not raw or not raw.strip() or "{" not in raw:
                         raw = json.dumps({
                         "severity": "P3",
@@ -316,9 +316,9 @@ async def run_inference(base_url):
         print(f"  {diff:8s}: {data['average']:.2f}  (scores: {data['scores']})")
 
 
-# -----------------------------
+
 # ENTRYPOINT
-# -----------------------------
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Inference Script")
     parser.add_argument("--base-url", default="http://localhost:8000")

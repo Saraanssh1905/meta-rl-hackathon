@@ -4,8 +4,7 @@ from openenv.core.env_server import Environment
 
 from server.scenarios import SCENARIOS, AVAILABLE_TEAMS
 
-# import sys, os
-# sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+
 from models import TriageAction, TriageObservation, TriageState
 
 def fuzzy_match(pred, expected):
@@ -16,10 +15,12 @@ def fuzzy_match(pred, expected):
     expected = expected.lower().replace("_", " ")
 
     # direct match
+    
     if expected in pred or pred in expected:
         return True
 
-    # synonyms (VERY IMPORTANT)
+    # synonyms
+
     SYNONYMS = {
     "database": ["db", "connection pool", "query overload", "db exhaustion"],
     "waf": ["firewall", "geoip", "blocked traffic"],
@@ -108,7 +109,7 @@ class IncidentTriageEnvironment(Environment):
         difficulty = session["difficulty"]
         correct = scenario["correct_answer"]
 
-    # 🔥 SAFE ATTRIBUTE ACCESS (VERY IMPORTANT)
+        # SAFE ATTRIBUTE ACCESS (VERY IMPORTANT)
 
         if not getattr(action, "severity", None):
             action.severity = "P3"
@@ -128,21 +129,25 @@ class IncidentTriageEnvironment(Environment):
         if not getattr(action, "root_cause_alert", None):
             action.root_cause_alert = ""
 
-        # 🔥 INPUT SANITIZATION
+        # INPUT SANITIZATION
 
-# Fix severity
+        # Fix severity
+
         if action.severity not in ["P1", "P2", "P3", "P4"]:
             action.severity = "P3"
 
-# Fix priority_order
+        # Fix priority_order
+
         if not isinstance(action.priority_order, list):
             action.priority_order = []
 
-# Fix actions
+        # Fix actions
+
         if not isinstance(action.actions, dict):
             action.actions = {}
 
-# Normalize team names
+        # Normalize team names
+
         if action.assigned_team:
             team = action.assigned_team.lower()
 
@@ -155,10 +160,11 @@ class IncidentTriageEnvironment(Environment):
     }
 
         action.assigned_team = TEAM_MAP.get(team, team)
-    # 👉 NOW grade
+    
         reward, feedback = self._grade(action, correct, difficulty)
 
-# 🔥 Penalty for missing root cause
+        # Penalty for missing root cause
+
         if action.root_cause.lower() in ["unknown issue","unknown",""]:
             reward -= 0.05
         if action.assigned_team.lower() in ["unknown", ""]:
@@ -169,10 +175,12 @@ class IncidentTriageEnvironment(Environment):
             reward -= 0.05
         if reward is None:
             reward = 0.0
-# Optional: prevent negative or >1 scores
+
+        #   Preventing negative or >1 scores
+
         reward = max(0.0, min(1.0, reward))
 
-# Optional: better feedback
+        
         feedback = f"Score: {reward} | {feedback}"
 
         self._set_session(session)
@@ -228,7 +236,7 @@ class IncidentTriageEnvironment(Environment):
         return 0.0, f"Wrong — you said {agent}, correct was {answer}."
 
     def _grade_medium(self, action, correct):
-        print("🔥 NEW GRADER ACTIVE")
+        
         score = 0.0
         fb = []
         agent_sev = action.severity.upper().strip()
@@ -247,7 +255,7 @@ class IncidentTriageEnvironment(Environment):
                 score += 0.35
                 fb.append("Root cause: ✓")
             else:
-        # 🔥 ADD PARTIAL MATCH HERE
+            # PARTIAL MATCH
                 if any(word in action.root_cause.lower() for word in correct["root_cause"].split("_")):
                     score += 0.20
                     fb.append("Root cause: partial (matched keywords)")

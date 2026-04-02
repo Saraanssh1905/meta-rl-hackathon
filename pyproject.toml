@@ -19,6 +19,6 @@ baseline = [
     "openai",
 ]
 
-# ✅ ADD THIS BLOCK (VERY IMPORTANT)
+
 [project.scripts]
 server = "server.app:main"
