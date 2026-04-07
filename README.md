@@ -436,9 +436,10 @@ We evaluated the agent with memory-enabled inference.
 
 **Hard Task Improvement**
 
-Setup	          Score
-Without memory	0.61
-With memory	    0.69
+0.61 -> 0.69 
+
+<img width="731" height="186" alt="image" src="https://github.com/user-attachments/assets/8c6318e8-8ca2-4226-b82f-0fab1767ea81" />
+
 
 This demonstrates that cross-episode memory improves performance on complex reasoning tasks, even in a single-step environment.
 
