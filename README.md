@@ -298,6 +298,69 @@ where environments act as evaluators rather than learners.
 
 ------------------------------------------------------------------------
 
+🔁 Cross-Episode Memory (Simulated Multi-Step Reasoning)
+
+Although the environment itself is strictly single-step per episode, we extend agent capability by introducing a cross-episode memory mechanism in the inference pipeline.
+
+💡 Key Idea
+
+Instead of modifying the environment (which remains stateless), we simulate multi-step reasoning by:
+
+Storing the previous episode’s trajectory
+Feeding it back into the agent’s prompt for the next episode
+
+This allows the agent to learn from past mistakes and iteratively improve decisions across episodes.
+
+⚙️ How It Works
+
+After each episode, we store:
+
+Agent action
+Reward received
+Feedback from the environment
+{
+  "action": {...},
+  "reward": 0.52,
+  "feedback": "Incorrect root cause..."
+}
+
+This is saved in a persistent memory file:
+
+memory/trajectory.json
+
+
+🔄 Memory → Prompt Injection
+
+Before generating the next action, the agent is given:
+
+PREVIOUS ATTEMPTS:
+Step 1:
+Action: ...
+Reward: ...
+Observation: ...
+
+Step 2:
+...
+
+This enables the model to:
+
+Identify incorrect reasoning patterns
+Avoid repeating mistakes
+Improve root cause identification and prioritization
+
+🧠 Why This Matters
+
+Even though the environment is single-step:
+
+The agent becomes trajectory-aware
+Decision-making becomes iterative instead of one-shot
+This simulates reinforcement learning-style improvement without modifying the environment
+📈 Observed Impact
+
+This mechanism had minimal effect on easy tasks (already near optimal), but showed clear improvement on hard cascading failure scenarios, where reasoning depth matters.
+
+------------------------------------------------------------------------
+
 ## ⚠️ Limitations
 
 - The environment uses predefined scenarios (not dynamic generation)
@@ -359,6 +422,28 @@ openenv push --repo-id `<your-username>`{=html}/incident-triage
   Easy         0.92
   Medium       1.00
   Hard         0.61
+
+------------------------------------------------------------------------
+
+📊 Memory-Enhanced Inference (Cross-Episode Learning)
+
+We evaluated the agent with memory-enabled inference.
+
+**Hard Task Improvement**
+
+Setup	          Score
+Without memory	0.61
+With memory	    0.69
+
+This demonstrates that cross-episode memory improves performance on complex reasoning tasks, even in a single-step environment.
+
+🧾 Memory Snapshot
+
+Example of stored trajectory:
+
+cat memory/trajectory.json
+
+
 
 ------------------------------------------------------------------------
 

@@ -7,7 +7,39 @@ from openai import OpenAI
 from client import IncidentTriageEnv
 from models import TriageAction
 
+# ================= MEMORY =================
 
+MEMORY_PATH = "memory/trajectory.json"
+
+
+def load_memory():
+    if not os.path.exists(MEMORY_PATH):
+        return {"steps": []}
+    with open(MEMORY_PATH, "r") as f:
+        return json.load(f)
+
+
+def save_memory(memory):
+    with open(MEMORY_PATH, "w") as f:
+        json.dump(memory, f, indent=2)
+
+
+def reset_memory():
+    save_memory({"steps": []})
+
+
+def append_memory(obs, action_dict, reward):
+    memory = load_memory()
+
+    memory["steps"].append({
+        "alerts": obs.alerts,
+        "logs": obs.logs,
+        "metrics": obs.metrics,
+        "action": action_dict,
+        "reward": reward 
+    })
+
+    save_memory(memory)
 
 # ENV CONFIG (MANDATORY)
 
@@ -30,6 +62,17 @@ else:
     print(" No API key found. Running in fallback mode.")
 
 def build_prompt(obs):
+    memory = load_memory()
+
+    history_text = ""
+    for i, step in enumerate(memory["steps"][-3:]):
+        history_text += f"""
+    Previous Step {i+1}:
+    Action: {step['action']}
+    Reward: {step['reward']}
+    Observation: {step['alerts']}
+    """
+        
     """Build an LLM prompt from the observation."""
     
     alerts_text = ""
@@ -42,7 +85,10 @@ def build_prompt(obs):
     hint_text = getattr(obs, "hint", None)
 
     prompt = f"""You are an expert on-call SRE engineer.
+    You are improving over previous attempts. Learn from past mistakes.
 
+PREVIOUS ATTEMPTS:
+{history_text}
 Think step-by-step internally, but DO NOT output your reasoning.
 
 IMPORTANT:
@@ -65,6 +111,7 @@ METRICS:
     prompt += """
 
 GUIDELINES:
+- Try to improve over previous reward and avoid repeating mistakes
 - Determine severity based on user impact:
   - P1: Complete outage or critical failure affecting most users
   - P2: Major degradation affecting many users
@@ -237,6 +284,7 @@ async def run_inference(base_url):
     all_results = {}
 
     for difficulty in ["easy", "medium", "hard"]:
+        reset_memory()
         scores = []
         failures=0
         print(f"\n{'='*50}")
@@ -297,6 +345,16 @@ async def run_inference(base_url):
 
                 step_result = await env.step(action)
                 reward = step_result.observation.reward or 0.0
+
+                
+                try:
+                    parsed = json.loads(raw)
+                except:
+                    parsed = {"severity": "P3"}
+
+                append_memory(obs, parsed, reward)
+
+                
                 scores.append(reward)
 
                 print(
@@ -325,3 +383,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     asyncio.run(run_inference(args.base_url))
+
