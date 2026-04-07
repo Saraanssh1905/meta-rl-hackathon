@@ -293,9 +293,10 @@ async def run_inference(base_url):
         print(f"{'='*50}")
 
         for ep in range(3):
-            async with IncidentTriageEnv(base_url=base_url) as env:
-                reset_result = await env.reset(seed=ep, difficulty=difficulty)
-                obs = reset_result.observation
+            try:
+                async with IncidentTriageEnv(base_url=base_url) as env:
+                    reset_result = await env.reset(seed=ep, difficulty=difficulty)
+                    obs = reset_result.observation
 
                 prompt = build_prompt(obs)
 
@@ -362,6 +363,10 @@ async def run_inference(base_url):
                     f"  ep{ep}: score={reward:.2f} "
                     f"| {step_result.observation.message[:80]}"
                 )
+                
+            except Exception as e:
+                print("Env connection failed:", e)
+                continue
 
         avg = round(sum(scores) / len(scores), 2)
         all_results[difficulty] = {"scores": scores, "average": avg}
@@ -380,7 +385,11 @@ async def run_inference(base_url):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Inference Script")
-    parser.add_argument("--base-url", default="http://localhost:8000")
+    parser.add_argument(
+        "--base-url",
+        default=os.getenv("BASE_URL") or os.getenv("API_BASE_URL") or "http://localhost:8000"
+    )
+
     args = parser.parse_args()
 
     asyncio.run(run_inference(args.base_url))
