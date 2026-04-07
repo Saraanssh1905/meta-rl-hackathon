@@ -1,5 +1,10 @@
 # Incident Triage & Escalation Environment (OpenEnv)
 
+🚀 Simulating Multi-Step Reasoning in a Single-Step Environment
+
+Although each episode in this environment is strictly single-step, we introduce a novel cross-episode memory mechanism that enables the agent to iteratively improve its decisions.
+By feeding previous actions, rewards, and feedback back into the model, we effectively simulate multi-step reasoning without modifying the environment dynamics.
+
 ## Overview
 
 Modern production systems fail in complex, cascading ways.
@@ -431,9 +436,10 @@ We evaluated the agent with memory-enabled inference.
 
 **Hard Task Improvement**
 
-Setup	          Score
-Without memory	0.61
-With memory	    0.69
+0.61 -> 0.69 
+
+<img width="731" height="186" alt="image" src="https://github.com/user-attachments/assets/8c6318e8-8ca2-4226-b82f-0fab1767ea81" />
+
 
 This demonstrates that cross-episode memory improves performance on complex reasoning tasks, even in a single-step environment.
 
@@ -443,8 +449,15 @@ Example of stored trajectory:
 
 cat memory/trajectory.json
 
+<img width="727" height="950" alt="image" src="https://github.com/user-attachments/assets/1c63b881-85c7-4a45-8209-83bd847939fc" />
+
+<img width="741" height="996" alt="image" src="https://github.com/user-attachments/assets/8e8ef432-45b7-4783-81d0-c58c4de4b638" />
+
+<img width="729" height="939" alt="image" src="https://github.com/user-attachments/assets/956fdaad-f6d4-4e19-a31a-56297ab26af0" />
 
 
+The agent stores full episode trajectories including alerts, logs, actions, and rewards.
+This enables cross-episode reasoning, where the model can identify failure patterns and improve decisions in subsequent attempts.
 ------------------------------------------------------------------------
 
 ## Inference
