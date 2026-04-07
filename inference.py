@@ -287,16 +287,19 @@ async def run_inference(base_url):
     for difficulty in ["easy", "medium", "hard"]:
         reset_memory()
         scores = []
-        failures=0
+        failures = 0
+
         print(f"\n{'='*50}")
         print(f"  {difficulty.upper()} TASKS")
         print(f"{'='*50}")
 
         for ep in range(3):
+            env = None
             try:
-                async with IncidentTriageEnv(base_url=base_url) as env:
-                    reset_result = await env.reset(seed=ep, difficulty=difficulty)
-                    obs = reset_result.observation
+                env = IncidentTriageEnv(base_url=base_url)
+
+                reset_result = await env.reset(seed=ep, difficulty=difficulty)
+                obs = reset_result.observation
 
                 prompt = build_prompt(obs)
 
@@ -315,70 +318,71 @@ async def run_inference(base_url):
 
                         raw = completion.choices[0].message.content or ""
 
-                        print(f"RAW MODEL OUTPUT: {raw}")
-
                     else:
                         raw = '{"severity": "P3"}'
 
-                    # fallback if empty or bad
-
                     if not raw or not raw.strip() or "{" not in raw:
                         raw = json.dumps({
+                            "severity": "P3",
+                            "root_cause": "unknown_issue",
+                            "assigned_team": "backend",
+                            "root_cause_alert": "",
+                            "priority_order": [],
+                            "actions": {}
+                        })
+
+                except Exception as e:
+                    print(f"Model failed ep{ep}: {e}")
+                    raw = json.dumps({
                         "severity": "P3",
-                        "root_cause": "unknown issue",
+                        "root_cause": "unknown_issue",
                         "assigned_team": "backend",
                         "root_cause_alert": "",
                         "priority_order": [],
                         "actions": {}
                     })
 
-                except Exception as e:
-                    print(f"  ep{ep}: model failed → fallback | {e}")
-                    raw = json.dumps({
-                        "severity": "P3",
-                        "root_cause": "unknown issue",
-                        "assigned_team": "backend",
-                        "root_cause_alert": "",
-                        "priority_order": [],
-                        "actions": {}
-                        })
-                    failures += 1
                 action = safe_parse_action(raw)
 
                 step_result = await env.step(action)
                 reward = step_result.observation.reward or 0.0
 
-                
                 try:
                     parsed = json.loads(raw)
                 except:
                     parsed = {"severity": "P3"}
 
                 append_memory(obs, parsed, reward)
-
-                
                 scores.append(reward)
 
                 print(
                     f"  ep{ep}: score={reward:.2f} "
                     f"| {step_result.observation.message[:80]}"
                 )
-                
-            except Exception as e:
-                print("Env connection failed:", e)
-                continue
 
-        avg = round(sum(scores) / len(scores), 2)
+            except Exception as e:
+                print(f"ENV FAILED ep{ep}: {e}")
+                failures += 1
+
+            finally:
+                if env:
+                    try:
+                        await env.close()
+                    except:
+                        pass
+
+        
+        avg = round(sum(scores) / len(scores), 2) if scores else 0.0
         all_results[difficulty] = {"scores": scores, "average": avg}
+
         print(f"\n  [{difficulty.upper()}] Average: {avg:.2f}")
-        print(f"  Failures: {failures}/{len(scores)}")
+        print(f"  Failures: {failures}/{len(scores) + failures}")
 
     print(f"\n{'='*50}")
     print("FINAL RESULTS SUMMARY")
     print(f"{'='*50}")
     for diff, data in all_results.items():
         print(f"  {diff:8s}: {data['average']:.2f}  (scores: {data['scores']})")
-
 
 
 # ENTRYPOINT
