@@ -8,6 +8,7 @@ from client import IncidentTriageEnv
 from models import TriageAction
 
 # ================= MEMORY =================
+os.makedirs("memory", exist_ok=True)
 
 MEMORY_PATH = "memory/trajectory.json"
 
