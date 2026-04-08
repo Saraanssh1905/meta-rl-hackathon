@@ -1,6 +1,15 @@
+---
+title: incident-triage
+emoji: üö®
+colorFrom: red
+colorTo: blue
+sdk: docker
+pinned: false
+---
+
 # Incident Triage & Escalation Environment (OpenEnv)
 
-Ä Simulating Multi-Step Reasoning in a Single-Step Environment
+- Simulating Multi-Step Reasoning in a Single-Step Environment
 
 Although each episode in this environment is strictly single-step, we introduce a novel cross-episode memory mechanism that enables the agent to iteratively improve its decisions.
 By feeding previous actions, rewards, and feedback back into the model, we effectively simulate multi-step reasoning without modifying the environment dynamics.
@@ -14,7 +23,7 @@ The three difficulty levels mirror how real incidents present themselves  from a
 
 ------------------------------------------------------------------------
 
-## ° Why We Built This
+## ! Why We Built This
 
 We wanted to move beyond toy RL environments and simulate something that actually happens in real systems.
 
@@ -33,14 +42,14 @@ Our goal was to build something that:
 
 ------------------------------------------------------------------------
 
-## Ç Repository Structure
+## - Repository Structure
 
 
 <img width="1024" height="665" alt="image" src="https://github.com/user-attachments/assets/61fb4cf8-c7d8-44bb-84d4-b186ade81734" />
 
 
 
-### © Architecture Overview
+###  Architecture Overview
 
 - `server/`  Backend simulation (what the agent interacts with)
 - `models.py`  Data contracts between agent and environment
@@ -60,7 +69,7 @@ done = True(1 step per episode)
 
 ------------------------------------------------------------------------
 
-## † Design Decisions
+## ¬† Design Decisions
 
 ### Single-Step Episodes
 We intentionally designed each episode to be a single step.
@@ -196,9 +205,9 @@ so the agent gets useful feedback instead of just pass/fail.
 
 ---
 
-### Ø Reward Structure by Task
+###  Reward Structure by Task
 
-#### ¢ Easy Task (Severity Classification)
+####  Easy Task (Severity Classification)
 
 Reward is based on distance from correct severity:
 
@@ -211,7 +220,7 @@ Reward is based on distance from correct severity:
 
 ---
 
-#### ° Medium Task (Diagnosis & Assignment)
+#### ! Medium Task (Diagnosis & Assignment)
 
 Total reward = weighted sum:
 
@@ -223,7 +232,7 @@ R = 0.4Severity + 0.35RootCause + 0.25Team
 
 ---
 
-#### ¥ Hard Task (Cascading Failure Triage)
+####  Hard Task (Cascading Failure Triage)
 
 Total reward:
 
@@ -232,7 +241,7 @@ R = 0.30RootCauseAlert + 0.20Severity + 0.25PriorityOrder + 0.10Team + 0.15Actio
 - Priority  full or partial (first correct)
 - Actions  keyword overlap scoring
 
-> ° Note: Even GPT-level models struggle with the hard tasks due to misleading signals.
+> ! Note: Even GPT-level models struggle with the hard tasks due to misleading signals.
 
 ---
 
@@ -264,7 +273,7 @@ for incorrect, incomplete, or suboptimal decisions.
 
 ---
 
-## ¨ Code-Level Mapping
+##  Code-Level Mapping
 
 The reward logic is directly implemented in:
 
@@ -279,7 +288,7 @@ Each function:
 
 ---
 
-## Å Learning Paradigm
+## ÔøΩ Learning Paradigm
 
 This environment does **not perform learning internally**.
 
@@ -303,11 +312,11 @@ where environments act as evaluators rather than learners.
 
 ------------------------------------------------------------------------
 
-Å Cross-Episode Memory (Simulated Multi-Step Reasoning)
+ÔøΩ Cross-Episode Memory (Simulated Multi-Step Reasoning)
 
 Although the environment itself is strictly single-step per episode, we extend agent capability by introducing a cross-episode memory mechanism in the inference pipeline.
 
-° Key Idea
+! Key Idea
 
 Instead of modifying the environment (which remains stateless), we simulate multi-step reasoning by:
 
@@ -334,7 +343,7 @@ This is saved in a persistent memory file:
 memory/trajectory.json
 
 
-Ñ Memory  Prompt Injection
+ Memory  Prompt Injection
 
 Before generating the next action, the agent is given:
 
@@ -353,14 +362,14 @@ Identify incorrect reasoning patterns
 Avoid repeating mistakes
 Improve root cause identification and prioritization
 
-† Why This Matters
+¬† Why This Matters
 
 Even though the environment is single-step:
 
 The agent becomes trajectory-aware
 Decision-making becomes iterative instead of one-shot
 This simulates reinforcement learning-style improvement without modifying the environment
-à Observed Impact
+ Observed Impact
 
 This mechanism had minimal effect on easy tasks (already near optimal), but showed clear improvement on hard cascading failure scenarios, where reasoning depth matters.
 
@@ -379,7 +388,7 @@ These were conscious trade-offs to ensure:
 
 ------------------------------------------------------------------------
 
-## Ä Future Improvements
+## - Future Improvements
 
 - Multi-step episodes with evolving system state
 - More diverse and noisy real-world scenarios
@@ -430,7 +439,7 @@ openenv push --repo-id `<your-username>`{=html}/incident-triage
 
 ------------------------------------------------------------------------
 
-ä Memory-Enhanced Inference (Cross-Episode Learning)
+ Memory-Enhanced Inference (Cross-Episode Learning)
 
 We evaluated the agent with memory-enabled inference.
 
@@ -443,7 +452,7 @@ We evaluated the agent with memory-enabled inference.
 
 This demonstrates that cross-episode memory improves performance on complex reasoning tasks, even in a single-step environment.
 
-æ Memory Snapshot
+ Memory Snapshot
 
 Example of stored trajectory:
 
@@ -479,7 +488,7 @@ https://huggingface.co/spaces/Saraanssh1905/incident-triage
 
 ------------------------------------------------------------------------
 
-## • Team Contributions
+##  Team Contributions
 
 - **Omkar Iyer**
   - Designed evaluation logic and reward shaping

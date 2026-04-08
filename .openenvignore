@@ -1,7 +1,0 @@
-.git
-__pycache__
-*.pyc
-uv.lock
-memory/
-my_env/
-README.md   

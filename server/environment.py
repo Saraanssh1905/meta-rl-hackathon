@@ -46,7 +46,7 @@ def fuzzy_match(pred, expected):
 _sessions = {}
 
 
-class IncidentTriageEnv(Environment):
+class IncidentTriageEnvironment(Environment):
     """IT incident triage environment for AI agent evaluation."""
 
     SUPPORTS_CONCURRENT_SESSIONS = True
