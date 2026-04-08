@@ -4,3 +4,4 @@ __pycache__
 uv.lock
 memory/
 my_env/
+README.md   
