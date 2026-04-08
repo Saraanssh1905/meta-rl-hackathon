@@ -309,7 +309,8 @@ async def main(base_url):
                     else:
                         await env.__aexit__(None, None, None)
 
-            score = max(min(sum(rewards_all), 1.0), 0.0)
+            # Task validation requires score to be strictly in (0, 1)
+            score = max(min(sum(rewards_all), 0.99), 0.01)
             success = score > 0.3
 
             log_end(success, steps_taken, score, rewards_all)
