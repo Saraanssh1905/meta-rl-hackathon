@@ -13,11 +13,11 @@ app = create_fastapi_app(
 def root():
     return RedirectResponse(url="/docs")
 
-# ✅ Used by OpenEnv
+#  Used by OpenEnv
 def main():
     return app
 
-# ✅ Used for CLI / python execution
+#  Used for CLI / python execution
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("server.app:app", host="0.0.0.0", port=7860)

@@ -125,12 +125,12 @@ def build_prompt(obs):
     GUIDELINES:
     - Use logs + metrics to find root cause
     - Do NOT rely only on alert text
-    - Map root cause → correct team
+    - Map root cause  correct team
 
     COMMON PATTERNS:
-    - connection pool exhausted → database
-    - WAF blocking → security
-    - memory leak → backend
+    - connection pool exhausted  database
+    - WAF blocking  security
+    - memory leak  backend
 
     MULTI-ALERT RULES:
     - Earliest failing component = root cause
@@ -191,7 +191,7 @@ def safe_parse(raw):
     except:
         data = {}
 
-    # 🔥 FORCE CORRECT TYPES
+    # � FORCE CORRECT TYPES
 
     severity = data.get("severity", "P3")
     if severity not in ["P1", "P2", "P3", "P4"]:
@@ -234,7 +234,7 @@ async def main(base_url):
 
     for difficulty in difficulties:
 
-        reset_memory()  # ✅ MEMORY PERSISTS ACROSS EPISODES
+        reset_memory()  #  MEMORY PERSISTS ACROSS EPISODES
 
         for ep in range(3):
 
@@ -250,7 +250,7 @@ async def main(base_url):
             try:
                 async with IncidentTriageEnv(base_url=base_url) as env:
 
-                    result = await env.reset(difficulty=difficulty)  # ❌ removed seed
+                    result = await env.reset(difficulty=difficulty)  #  removed seed
                     obs = result.observation
 
                     prompt = build_prompt(obs)
@@ -261,7 +261,7 @@ async def main(base_url):
                             messages=[{"role": "user", "content": prompt}],
                             temperature=0,
                             max_tokens=200,
-                            response_format={"type": "json_object"}  # 🔥 BIG FIX
+                            response_format={"type": "json_object"}  # � BIG FIX
                         )
                         raw = completion.choices[0].message.content or ""
                     except:

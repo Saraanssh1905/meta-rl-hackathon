@@ -7,7 +7,7 @@ AVAILABLE_TEAMS = ["backend", "frontend", "database", "network", "security", "de
 
 SCENARIOS = {
     
-    #  EASY — single alert, classify severity only
+    #  EASY  single alert, classify severity only
     
     "easy": [
         {
@@ -118,7 +118,7 @@ SCENARIOS = {
     ],
 
     
-    #  MEDIUM — alert + logs + metrics → severity + root cause + team
+    #  MEDIUM  alert + logs + metrics  severity + root cause + team
     
     "medium": [
         {
@@ -220,7 +220,7 @@ SCENARIOS = {
     ],
 
     
-    #  HARD — multiple alerts, cascading failure
+    #  HARD  multiple alerts, cascading failure
     
     "hard": [
         {

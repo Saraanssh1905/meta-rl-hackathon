@@ -1,6 +1,6 @@
 # Incident Triage & Escalation Environment (OpenEnv)
 
-🚀 Simulating Multi-Step Reasoning in a Single-Step Environment
+� Simulating Multi-Step Reasoning in a Single-Step Environment
 
 Although each episode in this environment is strictly single-step, we introduce a novel cross-episode memory mechanism that enables the agent to iteratively improve its decisions.
 By feeding previous actions, rewards, and feedback back into the model, we effectively simulate multi-step reasoning without modifying the environment dynamics.
@@ -9,12 +9,12 @@ By feeding previous actions, rewards, and feedback back into the model, we effec
 
 Modern production systems fail in complex, cascading ways.
 
-When incidents occur, on-call engineers must rapidly assess severity, identify root causes, route issues to the correct teams, and take recovery actions. This environment simulates that workflow as a reinforcement learning problem — grounded in real production failure patterns like database connection pool exhaustion, WAF/GeoIP misconfigurations, memory leaks from unevicted model caches, Redis cascades, and bad deployments triggering segfaults across backend servers.
-The three difficulty levels mirror how real incidents present themselves — from a single unambiguous alert to a multi-service cascading failure where the root cause is buried two layers deep.
+When incidents occur, on-call engineers must rapidly assess severity, identify root causes, route issues to the correct teams, and take recovery actions. This environment simulates that workflow as a reinforcement learning problem  grounded in real production failure patterns like database connection pool exhaustion, WAF/GeoIP misconfigurations, memory leaks from unevicted model caches, Redis cascades, and bad deployments triggering segfaults across backend servers.
+The three difficulty levels mirror how real incidents present themselves  from a single unambiguous alert to a multi-service cascading failure where the root cause is buried two layers deep.
 
 ------------------------------------------------------------------------
 
-## 💡 Why We Built This
+## � Why We Built This
 
 We wanted to move beyond toy RL environments and simulate something that actually happens in real systems.
 
@@ -23,7 +23,7 @@ During our research, we noticed that most OpenEnv submissions focus on games or 
 This environment is designed to reflect how on-call engineers think:
 - Not all signals are clear
 - Multiple components can fail simultaneously
-- The “correct” answer often has degrees of correctness
+- The correct answer often has degrees of correctness
 
 Our goal was to build something that:
 - Feels realistic
@@ -33,20 +33,20 @@ Our goal was to build something that:
 
 ------------------------------------------------------------------------
 
-## 📂 Repository Structure
+## � Repository Structure
 
 
 <img width="1024" height="665" alt="image" src="https://github.com/user-attachments/assets/61fb4cf8-c7d8-44bb-84d4-b186ade81734" />
 
 
 
-### 🧩 Architecture Overview
+### � Architecture Overview
 
-- `server/` → Backend simulation (what the agent interacts with)
-- `models.py` → Data contracts between agent and environment
-- `client.py` → Interface used by agents to communicate with the env
-- `inference.py` → Baseline agent using an LLM
-- `Dockerfile` → Deployment layer (HF Spaces)
+- `server/`  Backend simulation (what the agent interacts with)
+- `models.py`  Data contracts between agent and environment
+- `client.py`  Interface used by agents to communicate with the env
+- `inference.py`  Baseline agent using an LLM
+- `Dockerfile`  Deployment layer (HF Spaces)
 
 ------------------------------------------------------------------------
 
@@ -54,13 +54,13 @@ Our goal was to build something that:
 
 ### Episode Flow
 
-reset() → observation\
-step(action) → reward + feedback\
+reset()  observation\
+step(action)  reward + feedback\
 done = True(1 step per episode)
 
 ------------------------------------------------------------------------
 
-## 🧠 Design Decisions
+## � Design Decisions
 
 ### Single-Step Episodes
 We intentionally designed each episode to be a single step.
@@ -73,9 +73,9 @@ Reason:
 ### Weighted Reward Components
 We assigned different weights to each component:
 
-- Severity → high importance
-- Root cause → slightly less
-- Team → least
+- Severity  high importance
+- Root cause  slightly less
+- Team  least
 
 This reflects real-world impact:
 Getting severity wrong is more costly than assigning to the wrong team.
@@ -95,9 +95,9 @@ We intentionally added **noise and misleading signals** in hard tasks to simulat
 
 The agent outputs a structured triage decision depending on difficulty:
 
-- Easy → only severity
-- Medium → severity + root cause + team
-- Hard → full triage (ordering + actions)
+- Easy  only severity
+- Medium  severity + root cause + team
+- Hard  full triage (ordering + actions)
 
 
 <img width="886" height="472" alt="image" src="https://github.com/user-attachments/assets/f4de333b-94f7-4e37-a7fa-25ac2758557e" />
@@ -120,7 +120,7 @@ The agent outputs a structured triage decision depending on difficulty:
 
 ### Task 1 - Severity Classification (Easy)
 
-Single alert → classify severity. No logs or metrics provided — the agent must reason purely from alert text.
+Single alert  classify severity. No logs or metrics provided  the agent must reason purely from alert text.
 
 6 scenarios covering all severity levels:
 
@@ -140,7 +140,7 @@ Grading:
 
 ### Task 2 - Diagnose & Assign (Medium)
 
-Alert + logs + metrics → severity + root cause + team
+Alert + logs + metrics  severity + root cause + team
 
 3 scenarios:
 
@@ -160,7 +160,7 @@ Grading:
 
 ### Task 3 - Cascading Failure (Hard)
 
-Multiple alerts +logs+metrics → full triage decision.
+Multiple alerts +logs+metrics  full triage decision.
 
 2 scenarios:
 
@@ -188,7 +188,7 @@ Grading:
 
 ## Reward Function
 
-The environment uses a **dense, structured reward function (0.0 → 1.0)** that provides
+The environment uses a **dense, structured reward function (0.0  1.0)** that provides
 both **positive reinforcement for correct reasoning** and **implicit negative marking for mistakes**.
 
 Rather than binary success/failure, the agent is evaluated across multiple dimensions,
@@ -196,9 +196,9 @@ so the agent gets useful feedback instead of just pass/fail.
 
 ---
 
-### 🎯 Reward Structure by Task
+### � Reward Structure by Task
 
-#### 🟢 Easy Task (Severity Classification)
+#### � Easy Task (Severity Classification)
 
 Reward is based on distance from correct severity:
 
@@ -211,60 +211,60 @@ Reward is based on distance from correct severity:
 
 ---
 
-#### 🟡 Medium Task (Diagnosis & Assignment)
+#### � Medium Task (Diagnosis & Assignment)
 
 Total reward = weighted sum:
 
-R = 0.4·Severity + 0.35·RootCause + 0.25·Team
+R = 0.4Severity + 0.35RootCause + 0.25Team
 
-- Severity → exact or partial match
-- Root Cause → exact / partial string match
-- Team → exact match only
+- Severity  exact or partial match
+- Root Cause  exact / partial string match
+- Team  exact match only
 
 ---
 
-#### 🔴 Hard Task (Cascading Failure Triage)
+#### � Hard Task (Cascading Failure Triage)
 
 Total reward:
 
-R = 0.30·RootCauseAlert + 0.20·Severity + 0.25·PriorityOrder + 0.10·Team + 0.15·Actions  
+R = 0.30RootCauseAlert + 0.20Severity + 0.25PriorityOrder + 0.10Team + 0.15Actions  
 
-- Priority → full or partial (first correct)
-- Actions → keyword overlap scoring
+- Priority  full or partial (first correct)
+- Actions  keyword overlap scoring
 
-> 💡 Note: Even GPT-level models struggle with the hard tasks due to misleading signals.
+> � Note: Even GPT-level models struggle with the hard tasks due to misleading signals.
 
 ---
 
-## ⚠️ Negative Marking (Penalty Design)
+##  Negative Marking (Penalty Design)
 
 The environment incorporates **implicit negative marking** by reducing reward
 for incorrect, incomplete, or suboptimal decisions.
 
 ### Key Penalty Mechanisms
 
-#### ❌ Incorrect Decisions
-- Wrong severity → sharp drop (up to 0.0)
-- Wrong root cause / team → zero contribution for that component
+####  Incorrect Decisions
+- Wrong severity  sharp drop (up to 0.0)
+- Wrong root cause / team  zero contribution for that component
 
-#### ❌ Missing Information
+####  Missing Information
 - Not providing required fields (root cause, actions, etc.)
-  → treated as **0 contribution**
+   treated as **0 contribution**
 - Encourages **complete outputs**, not partial guessing
 
-#### ❌ Poor Reasoning / Ordering
+####  Poor Reasoning / Ordering
 - Incorrect priority order in hard tasks:
-  - Full mismatch → 0
-  - Only first correct → partial (0.10)
+  - Full mismatch  0
+  - Only first correct  partial (0.10)
 - Prevents random ordering strategies
 
-#### ❌ Low-Quality Actions
+####  Low-Quality Actions
 - Actions are evaluated via **semantic keyword overlap**
-- Irrelevant or vague actions → low score contribution
+- Irrelevant or vague actions  low score contribution
 
 ---
 
-## 🔬 Code-Level Mapping
+## � Code-Level Mapping
 
 The reward logic is directly implemented in:
 
@@ -274,12 +274,12 @@ The reward logic is directly implemented in:
 
 Each function:
 - Computes **component-wise scores**
-- Aggregates them into a final reward ∈ [0.0, 1.0]
+- Aggregates them into a final reward  [0.0, 1.0]
 - Returns **detailed feedback** explaining correctness
 
 ---
 
-## 🔁 Learning Paradigm
+## � Learning Paradigm
 
 This environment does **not perform learning internally**.
 
@@ -291,7 +291,7 @@ Learning occurs **externally**, where:
 
 - A training algorithm (e.g., RL, GRPO, fine-tuning)
 - Uses the reward signal returned by the environment
-- To iteratively improve the agent’s policy across episodes
+- To iteratively improve the agents policy across episodes
 
 The role of this environment is to provide:
 - A **high-quality reward signal**
@@ -303,20 +303,20 @@ where environments act as evaluators rather than learners.
 
 ------------------------------------------------------------------------
 
-🔁 Cross-Episode Memory (Simulated Multi-Step Reasoning)
+� Cross-Episode Memory (Simulated Multi-Step Reasoning)
 
 Although the environment itself is strictly single-step per episode, we extend agent capability by introducing a cross-episode memory mechanism in the inference pipeline.
 
-💡 Key Idea
+� Key Idea
 
 Instead of modifying the environment (which remains stateless), we simulate multi-step reasoning by:
 
-Storing the previous episode’s trajectory
-Feeding it back into the agent’s prompt for the next episode
+Storing the previous episodes trajectory
+Feeding it back into the agents prompt for the next episode
 
 This allows the agent to learn from past mistakes and iteratively improve decisions across episodes.
 
-⚙️ How It Works
+ How It Works
 
 After each episode, we store:
 
@@ -334,7 +334,7 @@ This is saved in a persistent memory file:
 memory/trajectory.json
 
 
-🔄 Memory → Prompt Injection
+� Memory  Prompt Injection
 
 Before generating the next action, the agent is given:
 
@@ -353,20 +353,20 @@ Identify incorrect reasoning patterns
 Avoid repeating mistakes
 Improve root cause identification and prioritization
 
-🧠 Why This Matters
+� Why This Matters
 
 Even though the environment is single-step:
 
 The agent becomes trajectory-aware
 Decision-making becomes iterative instead of one-shot
 This simulates reinforcement learning-style improvement without modifying the environment
-📈 Observed Impact
+� Observed Impact
 
 This mechanism had minimal effect on easy tasks (already near optimal), but showed clear improvement on hard cascading failure scenarios, where reasoning depth matters.
 
 ------------------------------------------------------------------------
 
-## ⚠️ Limitations
+##  Limitations
 
 - The environment uses predefined scenarios (not dynamic generation)
 - Root cause matching is string-based (not semantic understanding)
@@ -379,7 +379,7 @@ These were conscious trade-offs to ensure:
 
 ------------------------------------------------------------------------
 
-## 🚀 Future Improvements
+## � Future Improvements
 
 - Multi-step episodes with evolving system state
 - More diverse and noisy real-world scenarios
@@ -430,7 +430,7 @@ openenv push --repo-id `<your-username>`{=html}/incident-triage
 
 ------------------------------------------------------------------------
 
-📊 Memory-Enhanced Inference (Cross-Episode Learning)
+� Memory-Enhanced Inference (Cross-Episode Learning)
 
 We evaluated the agent with memory-enabled inference.
 
@@ -443,7 +443,7 @@ We evaluated the agent with memory-enabled inference.
 
 This demonstrates that cross-episode memory improves performance on complex reasoning tasks, even in a single-step environment.
 
-🧾 Memory Snapshot
+� Memory Snapshot
 
 Example of stored trajectory:
 
@@ -479,7 +479,7 @@ https://huggingface.co/spaces/Saraanssh1905/incident-triage
 
 ------------------------------------------------------------------------
 
-## 👥 Team Contributions
+## � Team Contributions
 
 - **Omkar Iyer**
   - Designed evaluation logic and reward shaping
