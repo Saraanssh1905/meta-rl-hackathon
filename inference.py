@@ -11,7 +11,7 @@ from models import TriageAction
 #  CONFIG
 API_BASE_URL = os.environ.get("API_BASE_URL", "https://router.huggingface.co/v1")
 API_KEY = os.environ.get("API_KEY") or os.environ.get("HF_TOKEN")
-MODEL_NAME = os.getenv("MODEL_NAME", "meta-llama/Llama-3.1-8B-Instruct")
+MODEL_NAME = os.getenv("MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct")
 
 MAX_STEPS = 1
 
@@ -255,17 +255,16 @@ async def main(base_url):
 
                     prompt = build_prompt(obs)
 
-                    try:
-                        completion = client.chat.completions.create(
+
+                    completion = client.chat.completions.create(
                             model=MODEL_NAME,
                             messages=[{"role": "user", "content": prompt}],
                             temperature=0,
                             max_tokens=200,
-                            response_format={"type": "json_object"}  # � BIG FIX
+                            
                         )
-                        raw = completion.choices[0].message.content or ""
-                    except:
-                        raw = '{"severity":"P3"}'
+                    raw = completion.choices[0].message.content or ""
+
 
                     action = safe_parse(raw)
 
