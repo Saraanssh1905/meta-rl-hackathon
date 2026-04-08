@@ -226,11 +226,17 @@ def safe_parse(raw):
 
 async def main(base_url):
 
-    api_base_url = os.environ.get("API_BASE_URL", "https://router.huggingface.co/v1")
-    api_key = os.environ.get("API_KEY") or os.environ.get("HF_TOKEN")
-    model_name = os.environ.get("MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct")
+    if "API_BASE_URL" not in os.environ:
+        os.environ["API_BASE_URL"] = "https://router.huggingface.co/v1"
+    if "API_KEY" not in os.environ:
+        os.environ["API_KEY"] = os.environ.get("HF_TOKEN", "dummy_key")
 
-    client = OpenAI(base_url=api_base_url, api_key=api_key)
+    client = OpenAI(
+        base_url=os.environ["API_BASE_URL"],
+        api_key=os.environ["API_KEY"]
+    )
+    
+    model_name = os.environ.get("MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct")
 
     difficulties = ["easy", "medium", "hard"]
 
