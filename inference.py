@@ -255,45 +255,59 @@ async def main(base_url):
                 model=model_name
             )
 
+            env = None
             try:
-                async with IncidentTriageEnv(base_url=base_url) as env:
+                image_name = os.environ.get("IMAGE_NAME")
+                if image_name:
+                    env = await IncidentTriageEnv.from_docker_image(image_name)
+                else:
+                    env = IncidentTriageEnv(base_url=base_url)
+                    await env.__aenter__()
 
-                    result = await env.reset(difficulty=difficulty)  #  removed seed
-                    obs = result.observation
+                result = await env.reset(difficulty=difficulty)  #  removed seed
+                obs = result.observation
 
-                    prompt = build_prompt(obs)
+                prompt = build_prompt(obs)
 
-
-                    completion = client.chat.completions.create(
-                            model=model_name,
-                            messages=[{"role": "user", "content": prompt}],
-                            temperature=0,
-                            max_tokens=200,
-                            
-                        )
-                    raw = completion.choices[0].message.content or ""
-
-
-                    action = safe_parse(raw)
-
-                    step_result = await env.step(action)
-                    reward = step_result.reward or 0.0
-
-                    append_memory(obs, action.__dict__, reward)
-
-                    rewards_all.append(reward)
-                    steps_taken = 1
-
-                    log_step(
-                        step=1,
-                        action=json.dumps(action.__dict__),
-                        reward=reward,
-                        done=True,
-                        error=None
+                completion = client.chat.completions.create(
+                        model=model_name,
+                        messages=[{"role": "user", "content": prompt}],
+                        temperature=0,
+                        max_tokens=200,
+                        
                     )
+                raw = completion.choices[0].message.content or ""
+
+
+                action = safe_parse(raw)
+
+                step_result = await env.step(action)
+                reward = step_result.reward or 0.0
+
+                append_memory(obs, action.__dict__, reward)
+
+                rewards_all.append(reward)
+                steps_taken = 1
+
+                log_step(
+                    step=1,
+                    action=json.dumps(action.__dict__),
+                    reward=reward,
+                    done=True,
+                    error=None
+                )
 
             except Exception as e:
-                print(f"[DEBUG] failure: {e}")
+                import traceback
+                print(f"[DEBUG] failure: {e}", flush=True)
+                traceback.print_exc()
+                raise e
+            finally:
+                if env:
+                    if image_name:
+                        await env.close()
+                    else:
+                        await env.__aexit__(None, None, None)
 
             score = max(min(sum(rewards_all), 1.0), 0.0)
             success = score > 0.3
