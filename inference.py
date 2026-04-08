@@ -10,8 +10,8 @@ from models import TriageAction
 
 #  CONFIG
 API_BASE_URL = os.environ.get("API_BASE_URL", "https://router.huggingface.co/v1")
-API_KEY = os.getenv("HF_TOKEN") or os.getenv("API_KEY")
-MODEL_NAME = os.getenv("MODEL_NAME") or "Qwen/Qwen2.5-72B-Instruct"
+API_KEY = os.environ.get("API_KEY") or os.environ.get("HF_TOKEN")
+MODEL_NAME = os.getenv("MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct")
 
 MAX_STEPS = 1
 
@@ -286,7 +286,6 @@ async def main(base_url):
 
             except Exception as e:
                 print(f"[DEBUG] failure: {e}")
-                raise
 
             score = max(min(sum(rewards_all), 1.0), 0.0)
             success = score > 0.3
