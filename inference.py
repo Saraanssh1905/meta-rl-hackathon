@@ -8,14 +8,14 @@ from openai import OpenAI
 from client import IncidentTriageEnv
 from models import TriageAction
 
-# ================= CONFIG =================
+#  CONFIG
 API_BASE_URL = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
 API_KEY = os.getenv("HF_TOKEN") or os.getenv("API_KEY")
 MODEL_NAME = os.getenv("MODEL_NAME", "meta-llama/Llama-3.1-8B-Instruct")
 
 MAX_STEPS = 1
 
-# ================= MEMORY =================
+#  MEMORY 
 os.makedirs("memory", exist_ok=True)
 MEMORY_PATH = "memory/trajectory.json"
 
@@ -41,7 +41,7 @@ def append_memory(obs, action_dict, reward):
     })
     save_memory(memory)
 
-# ================= LOGGING =================
+#  LOGGING 
 
 def log_start(task, env, model):
     print(f"[START] task={task} env={env} model={model}", flush=True)
@@ -60,7 +60,7 @@ def log_end(success, steps, score, rewards):
         flush=True
     )
 
-# ================= PROMPT =================
+# PROMPT 
 
 def build_prompt(obs):
     memory = load_memory()
@@ -181,7 +181,7 @@ def build_prompt(obs):
 
     return prompt
 
-# ================= SAFE PARSE =================
+# SAFE PARSE 
 
 def safe_parse(raw):
     try:
@@ -191,7 +191,7 @@ def safe_parse(raw):
     except:
         data = {}
 
-    # ¥ FORCE CORRECT TYPES
+    # FORCE CORRECT TYPES
 
     severity = data.get("severity", "P3")
     if severity not in ["P1", "P2", "P3", "P4"]:
@@ -224,7 +224,7 @@ def safe_parse(raw):
         actions=actions,
     )
 
-# ================= MAIN =================
+# MAIN 
 
 async def main(base_url):
 
@@ -261,7 +261,7 @@ async def main(base_url):
                             messages=[{"role": "user", "content": prompt}],
                             temperature=0,
                             max_tokens=200,
-                            response_format={"type": "json_object"}  # ¥ BIG FIX
+                            response_format={"type": "json_object"}  # ï¿½ BIG FIX
                         )
                         raw = completion.choices[0].message.content or ""
                     except:
@@ -293,7 +293,7 @@ async def main(base_url):
 
             log_end(success, steps_taken, score, rewards_all)
 
-# ================= ENTRY =================
+# ENTRY 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
