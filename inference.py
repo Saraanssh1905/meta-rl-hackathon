@@ -277,34 +277,56 @@ def safe_parse_action(raw_text):
         actions=actions,
     )
 
+def log_start(task, env, model):
+    print(f"[START] task={task} env={env} model={model}", flush=True)
 
+def log_step(step, action, reward, done, error):
+    error_val = error if error else "null"
+    done_val = str(done).lower()
+    print(
+        f"[STEP] step={step} action={action} reward={reward:.2f} done={done_val} error={error_val}",
+        flush=True,
+    )
 
-# MAIN RUN
+def log_end(success, steps, score, rewards):
+    rewards_str = ",".join(f"{r:.2f}" for r in rewards)
+    print(
+        f"[END] success={str(success).lower()} steps={steps} score={score:.2f} rewards={rewards_str}",
+        flush=True,
+    )
 
-async def run_inference(base_url):
-    all_results = {}
+async def run_episode(base_url, difficulty):
+    TASK_NAME = "incident_triage"
+    BENCHMARK = "openenv"
 
-    for difficulty in ["easy", "medium", "hard"]:
-        reset_memory()
-        scores = []
-        failures = 0
+    log_start(f"{difficulty}_task", BENCHMARK, MODEL_NAME)
 
-        print(f"\n{'='*50}")
-        print(f"  {difficulty.upper()} TASKS")
-        print(f"{'='*50}")
+    rewards = []
+    steps_taken = 0
+    success = False
 
-        for ep in range(3):
+    env = None
+
+    try:
+        # -------- SAFE ENV INIT --------
+        try:
+            env = IncidentTriageEnv(base_url=base_url)
+            result = await env.reset()
+            obs = result.observation
+        except Exception as e:
+            print("[DEBUG] ENV RESET FAILED:", e)
+            env = None
+            obs = type("MockObs", (), {
+                "alerts": [],
+                "logs": [],
+                "metrics": {},
+                "task_difficulty": "easy",
+                "hint": None
+            })()
+
+        # -------- STEP LOOP --------
+        for step in range(1, 6):
             try:
-                use_env = False
-
-                obs = type("MockObs", (), {
-                    "alerts": [],
-                    "logs": [],
-                    "metrics": {},
-                    "task_difficulty": difficulty,
-                    "hint": None
-                })()
-
                 prompt = build_prompt(obs)
 
                 try:
@@ -327,7 +349,6 @@ async def run_inference(base_url):
                         raise ValueError("Bad output")
 
                 except Exception as e:
-                    print(f"Model failed ep{ep}: {e}")
                     raw = json.dumps({
                         "severity": "P3",
                         "root_cause": "unknown_issue",
@@ -340,45 +361,71 @@ async def run_inference(base_url):
                 try:
                     action = safe_parse_action(raw)
                 except:
-                    action = {"severity": "P3"}
+                    action = TriageAction(severity="P3")
 
                 reward = 0.0
+                done = False
+                error = None
 
+                # -------- SAFE STEP --------
+                if env:
+                    try:
+                        result = await env.step(action)
+                        obs = result.observation
+                        reward = result.observation.reward or 0.0
+                        done = result.done
+                    except Exception as e:
+                        error = str(e)
 
+                rewards.append(reward)
+                steps_taken = step
 
-                try:
-                    parsed = json.loads(raw)
-                except:
-                    parsed = {"severity": "P3"}
+                log_step(step, str(action), reward, done, error)
 
-                append_memory(obs, parsed, reward)
-                scores.append(reward)
-
-                print(f"  ep{ep}: score={reward:.2f}")
+                if done:
+                    break
 
             except Exception as e:
-                print(f"EP FAILED ep{ep}: {e}")
+                log_step(step, "fallback", 0.0, False, str(e))
                 continue
 
-            finally:
-                try:
-                    if use_env:
-                        await env.close()
-                except:
-                    pass
+        score = sum(rewards) / len(rewards) if rewards else 0.0
+        success = score > 0
 
-        
-        avg = round(sum(scores) / len(scores), 2) if scores else 0.0
-        all_results[difficulty] = {"scores": scores, "average": avg}
+    except Exception as e:
+        print("[DEBUG] EPISODE FAILED:", e)
 
-        print(f"\n  [{difficulty.upper()}] Average: {avg:.2f}")
-        print(f"  Failures: {failures}/{len(scores) + failures}")
+    finally:
+        try:
+            if env:
+                await env.close()
+        except:
+            pass
 
-    print(f"\n{'='*50}")
-    print("FINAL RESULTS SUMMARY")
-    print(f"{'='*50}")
-    for diff, data in all_results.items():
-        print(f"  {diff:8s}: {data['average']:.2f}  (scores: {data['scores']})")
+        log_end(success, steps_taken, score, rewards)
+        return score   
+
+
+# MAIN RUN
+
+async def run_inference(base_url):
+    difficulties = ["easy", "medium", "hard"]
+    difficulty_scores = {}
+
+    for difficulty in difficulties:
+        scores = []
+
+        for ep in range(3):
+            score = await run_episode(base_url, difficulty)
+            scores.append(score)
+
+        avg = sum(scores) / len(scores) if scores else 0.0
+        difficulty_scores[difficulty] = avg
+
+    
+    print("\n[DEBUG] FINAL SCORES")
+    for d, s in difficulty_scores.items():
+        print(f"[DEBUG] {d} avg: {s:.2f}")
 
 
 # ENTRYPOINT
