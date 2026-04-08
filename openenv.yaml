@@ -18,6 +18,8 @@ tags:
 
 interface: step
 
+env: server.environment:IncidentTriageEnv
+
 # Optional but useful metadata
 metadata:
   difficulty_levels:
