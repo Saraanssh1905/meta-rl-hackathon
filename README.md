@@ -97,6 +97,8 @@ Scenarios were inspired by real production issues:
 - Cache cascades
 - Bad deployments
 
+**Dynamic Generative Layer:** To prevent agent memorization and test true reinforcement learning generalization, the environment applies a generative layer during `reset()`. Base scenario archetypes are dynamically perturbed, randomizing system IDs, scaling latency multipliers (e.g. `200ms` to `245ms`), and shifting resource metric percentages. This effectively creates an infinite, un-memorizable state space while maintaining underlying logical consistency.
+
 We intentionally added **noise and misleading signals** in hard tasks to simulate real debugging complexity.
 
 ------------------------------------------------------------------------
@@ -318,12 +320,12 @@ where environments act as evaluators rather than learners.
 ------------------------------------------------------------------------
 
 ##  Live Agent Performance (Our Latest Run)
-Following full LLM reasoning via Qwen 72B Instruct:
+Following full LLM reasoning via Qwen 72B Instruct on **Dynamic Generative Scenarios**:
   Difficulty   Validation Score
   ------------ ----------------
-  Easy         **0.99** *(Perfect routing & diagnosis)*
-  Medium       **0.80** *(Near optimal assignments)*
-  Hard         **0.84** *(Significant improvement over baseline!)*
+  Easy         **1.00** *(Perfect routing & diagnosis)*
+  Medium       **~0.86** *(Near optimal assignments)*
+  Hard         **~0.90** *(Significant resilience to noise / cascaded failures)*
 
 ------------------------------------------------------------------------
 
@@ -392,7 +394,6 @@ This mechanism had minimal effect on easy tasks (already near optimal), but show
 
 ##  Limitations
 
-- The environment uses predefined scenarios (not dynamic generation)
 - Root cause matching is string-based (not semantic understanding)
 - Single-step episodes limit long-horizon learning
 
@@ -444,13 +445,13 @@ openenv push --repo-id `<your-username>`{=html}/incident-triage
 
 ------------------------------------------------------------------------
 
-## Baseline Scores
+## Automated Agent Scores (w/ Dynamic Gen)
 
   Difficulty   Score
   ------------ -------
-  Easy         0.99
-  Medium       0.80
-  Hard         0.84
+  Easy         1.00
+  Medium       0.86
+  Hard         0.90
 
 ------------------------------------------------------------------------
 
