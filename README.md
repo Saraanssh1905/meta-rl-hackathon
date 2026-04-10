@@ -433,7 +433,7 @@ Open: http://127.0.0.1:8000/docs
 ### Docker
 
 docker build -t incident-triage\
-docker run -p 7860:7860 incident-triage
+docker run -p 8000:8000 incident-triage
 
 ------------------------------------------------------------------------
 

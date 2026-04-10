@@ -9,11 +9,18 @@ app = create_fastapi_app(
     TriageObservation
 )
 
-from fastapi.openapi.docs import get_swagger_ui_html
+from starlette.middleware.base import BaseHTTPMiddleware
+from fastapi.responses import HTMLResponse
 
-@app.get("/")
-def root():
-    return get_swagger_ui_html(openapi_url="/openapi.json", title="API Docs")
+class IframeDocsRedirectMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        # Intercept the root path before any default HF or OpenEnv routers get it
+        if request.url.path == "/":
+            html_content = '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=docs" /></head><body></body></html>'
+            return HTMLResponse(content=html_content)
+        return await call_next(request)
+
+app.add_middleware(IframeDocsRedirectMiddleware)
 
 #  Used by OpenEnv
 def main():
@@ -22,4 +29,4 @@ def main():
 #  Used for CLI / python execution
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("server.app:app", host="0.0.0.0", port=7860)
+    uvicorn.run("server.app:app", host="0.0.0.0", port=8000)
