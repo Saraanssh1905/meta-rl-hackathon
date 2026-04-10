@@ -70,9 +70,11 @@ class IncidentTriageEnvironment(Environment):
         difficulty = kwargs.get("difficulty", "easy")
         scenarios = SCENARIOS.get(difficulty, SCENARIOS["easy"])
 
-        if seed is not None:
-            random.seed(seed)
-        scenario = random.choice(scenarios)
+        from server.scenarios import apply_dynamic_layer
+
+        rng = random.Random(seed) if seed is not None else random
+        scenario_template = rng.choice(scenarios)
+        scenario = apply_dynamic_layer(scenario_template, rng)
 
         session_data = {
             "scenario": scenario,
@@ -103,6 +105,8 @@ class IncidentTriageEnvironment(Environment):
         session = self._get_session()
         if not session:
             raise ValueError("No active session. Call reset() first.")
+        if session.get("done"):
+            raise ValueError("Episode already finished")
 
         session["step_count"] += 1
         scenario = session["scenario"]
@@ -148,8 +152,7 @@ class IncidentTriageEnvironment(Environment):
 
         # Normalize team names
 
-        if action.assigned_team:
-            team = action.assigned_team.lower()
+        team = action.assigned_team.lower() if action.assigned_team else ""
 
         TEAM_MAP = {
         "infrastructure team": "infra",
@@ -183,6 +186,7 @@ class IncidentTriageEnvironment(Environment):
         
         feedback = f"Score: {reward} | {feedback}"
 
+        session["done"] = True
         self._set_session(session)
 
         return TriageObservation(
@@ -233,7 +237,7 @@ class IncidentTriageEnvironment(Environment):
             if diff == 2:
                 return 0.4, f"Off by 2  you said {agent}, correct was {answer}."
 
-        return 0.0, f"Wrong  you said {agent}, correct was {answer}."
+        return 0.1, f"Wrong  you said {agent}, correct was {answer}."
 
     def _grade_medium(self, action, correct):
         

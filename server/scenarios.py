@@ -3,7 +3,13 @@ Incident scenarios: 6 easy, 3 medium, 2 hard.
 Each has alert data (shown to agent) and correct_answer (used for grading).
 """
 
-AVAILABLE_TEAMS = ["backend", "frontend", "database", "network", "security", "devops"]
+import copy
+import random
+import uuid
+import json
+import re
+
+AVAILABLE_TEAMS = ["backend", "frontend", "database", "network", "security", "infra"]
 
 SCENARIOS = {
     
@@ -374,3 +380,35 @@ SCENARIOS = {
         },
     ],
 }
+
+def apply_dynamic_layer(base_scenario, rng: random.Random):
+    """
+    Applies dynamic perturbations to a scenario to prevent memorization
+    and ensure infinite state space variance.
+    """
+    scenario = copy.deepcopy(base_scenario)
+    
+    # Overwrite the ID to ensure it is globally unique per reset
+    scenario["id"] = f"{scenario['id']}_gen_{uuid.uuid4().hex[:6]}"
+    
+    # Perturb metric magnitudes via regex to ensure text varies
+    latency_multiplier = rng.uniform(0.8, 1.25)
+    metric_shift = rng.randint(-10, 10)
+    
+    scenario_str = json.dumps(scenario)
+    
+    def repl_num(match):
+        val = match.group(0)
+        try:
+            if "ms" in val:
+                num = int(val.replace("ms", ""))
+                return f"{int(num * latency_multiplier)}ms"
+            elif "%" in val:
+                num = int(val.replace("%", ""))
+                return f"{max(1, min(99, num + metric_shift))}%"
+        except Exception:
+            pass
+        return val
+
+    scenario_str = re.sub(r'\b\d+(ms|%)\b', repl_num, scenario_str)
+    return json.loads(scenario_str)
