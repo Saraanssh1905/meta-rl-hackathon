@@ -140,7 +140,8 @@ Single alert  classify severity. No logs or metrics provided  the agent must rea
 
 Results:
 
-<img width="1898" height="296" alt="image" src="https://github.com/user-attachments/assets/35f0203a-2e55-4506-9dde-3dd307cd845c" />
+<img width="1904" height="299" alt="image" src="https://github.com/user-attachments/assets/cbcbd684-72bd-4197-9703-3ac37d75d985" />
+
 
 
 
@@ -163,7 +164,8 @@ Alert + logs + metrics  severity + root cause + team
 Results:
 
 
-<img width="1898" height="227" alt="image" src="https://github.com/user-attachments/assets/955446cd-0ae4-4272-ab81-c8de8d2253ba" />
+<img width="1905" height="200" alt="image" src="https://github.com/user-attachments/assets/bf8da480-1aa6-45df-862f-08859c94dc8a" />
+
 
 
 Grading:
@@ -189,7 +191,8 @@ Multiple alerts +logs+metrics  full triage decision.
 
 Results:
 
-<img width="1897" height="295" alt="image" src="https://github.com/user-attachments/assets/26ae4d68-000b-4435-8e17-a0ee8f581559" />
+<img width="1901" height="259" alt="image" src="https://github.com/user-attachments/assets/3f8a133c-7dad-455d-b42e-a7cf8b5b32bc" />
+
 
 
 Grading: 
@@ -461,11 +464,7 @@ Example of stored trajectory:
 
 cat memory/trajectory.json
 
-<img width="727" height="950" alt="image" src="https://github.com/user-attachments/assets/1c63b881-85c7-4a45-8209-83bd847939fc" />
-
-<img width="741" height="996" alt="image" src="https://github.com/user-attachments/assets/8e8ef432-45b7-4783-81d0-c58c4de4b638" />
-
-<img width="729" height="939" alt="image" src="https://github.com/user-attachments/assets/956fdaad-f6d4-4e19-a31a-56297ab26af0" />
+<img width="1897" height="342" alt="image" src="https://github.com/user-attachments/assets/0f24743c-d415-4e1b-9fce-54618a249376" />
 
 
 The agent stores full episode trajectories including alerts, logs, actions, and rewards.
