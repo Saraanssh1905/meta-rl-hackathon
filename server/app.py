@@ -9,9 +9,11 @@ app = create_fastapi_app(
     TriageObservation
 )
 
+from fastapi.openapi.docs import get_swagger_ui_html
+
 @app.get("/")
 def root():
-    return RedirectResponse(url="/docs")
+    return get_swagger_ui_html(openapi_url="/openapi.json", title="API Docs")
 
 #  Used by OpenEnv
 def main():
