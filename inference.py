@@ -319,7 +319,7 @@ async def main(base_url):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--base-url", default="http://localhost:7860")
+    parser.add_argument("--base-url", default="http://localhost:8000")
     args = parser.parse_args()
 
     asyncio.run(main(args.base_url))

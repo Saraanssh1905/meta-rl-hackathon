@@ -5,6 +5,7 @@ colorFrom: red
 colorTo: blue
 sdk: docker
 pinned: false
+app_port: 8000
 ---
 
 # Incident Triage & Escalation Environment (OpenEnv)
