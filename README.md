@@ -137,7 +137,9 @@ Single alert  classify severity. No logs or metrics provided  the agent must rea
 
 Results:
 
-<img width="636" height="214" alt="image" src="https://github.com/user-attachments/assets/270e119e-25cc-46b0-867a-efda5b5f9237" />
+<img width="1898" height="296" alt="image" src="https://github.com/user-attachments/assets/35f0203a-2e55-4506-9dde-3dd307cd845c" />
+
+
 
 Grading:
 
@@ -158,7 +160,8 @@ Alert + logs + metrics  severity + root cause + team
 Results:
 
 
-<img width="676" height="399" alt="image" src="https://github.com/user-attachments/assets/aba25dfe-9787-4b63-a13b-61dc7d810fbc" />
+<img width="1898" height="227" alt="image" src="https://github.com/user-attachments/assets/955446cd-0ae4-4272-ab81-c8de8d2253ba" />
+
 
 Grading:
 
@@ -183,7 +186,8 @@ Multiple alerts +logs+metrics  full triage decision.
 
 Results:
 
-<img width="920" height="856" alt="image" src="https://github.com/user-attachments/assets/e1d94aa3-c6ad-4331-9d13-23b8f0b387d3" />
+<img width="1897" height="295" alt="image" src="https://github.com/user-attachments/assets/26ae4d68-000b-4435-8e17-a0ee8f581559" />
+
 
 Grading: 
 
@@ -312,6 +316,16 @@ where environments act as evaluators rather than learners.
 
 ------------------------------------------------------------------------
 
+##  Live Agent Performance (Our Latest Run)
+Following full LLM reasoning via Qwen 72B Instruct:
+  Difficulty   Validation Score
+  ------------ ----------------
+  Easy         **0.99** *(Perfect routing & diagnosis)*
+  Medium       **0.80** *(Near optimal assignments)*
+  Hard         **0.84** *(Significant improvement over baseline!)*
+
+------------------------------------------------------------------------
+
 � Cross-Episode Memory (Simulated Multi-Step Reasoning)
 
 Although the environment itself is strictly single-step per episode, we extend agent capability by introducing a cross-episode memory mechanism in the inference pipeline.
@@ -433,24 +447,11 @@ openenv push --repo-id `<your-username>`{=html}/incident-triage
 
   Difficulty   Score
   ------------ -------
-  Easy         0.92
-  Medium       1.00
-  Hard         0.61
+  Easy         0.99
+  Medium       0.80
+  Hard         0.84
 
 ------------------------------------------------------------------------
-
- Memory-Enhanced Inference (Cross-Episode Learning)
-
-We evaluated the agent with memory-enabled inference.
-
-**Hard Task Improvement**
-
-0.61 -> 0.69 
-
-<img width="731" height="186" alt="image" src="https://github.com/user-attachments/assets/8c6318e8-8ca2-4226-b82f-0fab1767ea81" />
-
-
-This demonstrates that cross-episode memory improves performance on complex reasoning tasks, even in a single-step environment.
 
  Memory Snapshot
 
