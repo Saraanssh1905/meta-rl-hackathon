@@ -234,7 +234,7 @@ Reward is based on distance from correct severity:
 
 Total reward = weighted sum:
 
-R = 0.4*Severity + 0.35*RootCause + 0.25*Team
+R = 0.4Severity + 0.35RootCause + 0.25Team
 
 - Severity  exact or partial match
 - Root Cause  exact / partial string match
@@ -246,7 +246,7 @@ R = 0.4*Severity + 0.35*RootCause + 0.25*Team
 
 Total reward:
 
-R = 0.30*RootCauseAlert + 0.20*Severity + 0.25*PriorityOrder + 0.10*Team + 0.15*Actions  
+R = 0.30RootCauseAlert + 0.20Severity + 0.25PriorityOrder + 0.10Team + 0.15Actions  
 
 - Priority  full or partial (first correct)
 - Actions  keyword overlap scoring
