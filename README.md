@@ -24,7 +24,7 @@ The three difficulty levels mirror how real incidents present themselves  from a
 
 ------------------------------------------------------------------------
 
-## ! Why We Built This
+## Why We Built This
 
 We wanted to move beyond toy RL environments and simulate something that actually happens in real systems.
 
@@ -124,9 +124,6 @@ The agent outputs a structured triage decision depending on difficulty:
 
 ## Observation Space
 
-<img width="830" height="764" alt="image" src="https://github.com/user-attachments/assets/8a2a3e80-9497-4514-b338-028adc319930" />
-
-
 | Field | Type | Description |
 |-------|------|-------------|
 | `task_id` | `str` | Unique scenario identifier (e.g. `easy_01`, `hard_02_gen_a3f1c2`) |
@@ -136,6 +133,9 @@ The agent outputs a structured triage decision depending on difficulty:
 | `metrics` | `Dict[str, str]` | System metrics snapshot (medium / hard only; empty on easy) |
 | `message` | `str` | Task instructions on reset; scoring feedback after step |
 | `available_teams` | `List[str]` | `["backend", "frontend", "database", "network", "security", "infra"]` |
+| `available_severities` | `List[str]` | Always `["P1", "P2", "P3", "P4"]` |
+| `reward` | `float \| None` | `None` after reset; score in `[0.0, 1.0]` after step |
+| `done` | `bool` | `False` after reset; `True` after step |
 
 ------------------------------------------------------------------------
 
@@ -213,87 +213,36 @@ Multiple alerts + logs + metrics → full triage decision with root cause identi
 | Actions | 0.20 | Per-action keyword match requiring ≥60% overlap (anti-hack threshold) |
 
 ------------------------------------------------------------------------
-------------------------------------------------------------------------
 
-## Reward Function
-
-The environment uses a **dense, structured reward function (0.0  1.0)** that provides
-both **positive reinforcement for correct reasoning** and **implicit negative marking for mistakes**.
-
-Rather than binary success/failure, the agent is evaluated across multiple dimensions,
-so the agent gets useful feedback instead of just pass/fail.
-
----
-
-###  Reward Structure by Task
-
-####  Easy Task (Severity Classification)
-
-Reward is based on distance from correct severity:
-
-| Condition | Reward |
-|----------|--------|
-| Exact match | 1.0 |
-| Off by 1 level | 0.7 |
-| Off by 2 levels | 0.4 |
-| Completely wrong | 0.0 |
-
----
-
-#### ! Medium Task (Diagnosis & Assignment)
-
-Total reward = weighted sum:
-
-R = 0.4Severity + 0.35RootCause + 0.25Team
-
-- Severity  exact or partial match
-- Root Cause  exact / partial string match
-- Team  exact match only
-
----
-
-####  Hard Task (Cascading Failure Triage)
-
-Total reward:
-
-R = 0.30RootCauseAlert + 0.20Severity + 0.25PriorityOrder + 0.10Team + 0.15Actions  
-
-- Priority  full or partial (first correct)
-- Actions  keyword overlap scoring
-
-> ! Note: Even GPT-level models struggle with the hard tasks due to misleading signals.
-
----
-
-##  Negative Marking (Penalty Design)
+## Negative Marking (Penalty Design)
 
 The environment incorporates **implicit negative marking** by reducing reward
 for incorrect, incomplete, or suboptimal decisions.
 
 ### Key Penalty Mechanisms
 
-####  Incorrect Decisions
-- Wrong severity  sharp drop (up to 0.0)
-- Wrong root cause / team  zero contribution for that component
+#### Incorrect Decisions
+- Wrong severity → sharp drop (up to 0.0)
+- Wrong root cause / team → zero contribution for that component
 
-####  Missing Information
-- Not providing required fields (root cause, actions, etc.)
-   treated as **0 contribution**
+#### Missing Information
+- Not providing required fields (root cause, actions, etc.) treated as **0 contribution**
 - Encourages **complete outputs**, not partial guessing
 
-####  Poor Reasoning / Ordering
+#### Poor Reasoning / Ordering
 - Incorrect priority order in hard tasks:
-  - Full mismatch  0
-  - Only first correct  partial (0.10)
+  - Full mismatch → 0
+  - Only first correct → partial (0.10)
 - Prevents random ordering strategies
 
-####  Low-Quality Actions
-- Actions are evaluated via **semantic keyword overlap**
-- Irrelevant or vague actions  low score contribution
+#### Low-Quality Actions
+- Actions are evaluated via **normalized keyword overlap** with a ≥60% threshold
+- Irrelevant or vague actions → low score contribution
+- Prevents reward hacking via buzzword stuffing
 
 ---
 
-##  Code-Level Mapping
+## Code-Level Mapping
 
 The reward logic is directly implemented in:
 
@@ -303,12 +252,12 @@ The reward logic is directly implemented in:
 
 Each function:
 - Computes **component-wise scores**
-- Aggregates them into a final reward  [0.0, 1.0]
+- Aggregates them into a final reward ∈ [0.0, 1.0]
 - Returns **detailed feedback** explaining correctness
 
 ---
 
-## � Learning Paradigm
+## Learning Paradigm
 
 This environment does **not perform learning internally**.
 
@@ -320,7 +269,7 @@ Learning occurs **externally**, where:
 
 - A training algorithm (e.g., RL, GRPO, fine-tuning)
 - Uses the reward signal returned by the environment
-- To iteratively improve the agents policy across episodes
+- To iteratively improve the agent's policy across episodes
 
 The role of this environment is to provide:
 - A **high-quality reward signal**
@@ -332,74 +281,61 @@ where environments act as evaluators rather than learners.
 
 ------------------------------------------------------------------------
 
-##  Live Agent Performance (Our Latest Run)
-Following full LLM reasoning via Qwen 72B Instruct on **Dynamic Generative Scenarios**:
-  Difficulty   Validation Score
-  ------------ ----------------
-  Easy         **1.00** *(Perfect routing & diagnosis)*
-  Medium       **~0.77** *(Demands mathematically precise root causes)*
-  Hard         **~0.80** *(Heavily penalizes loose or verbose action descriptions)*
+## Live Agent Performance
+
+Baseline scores using **Qwen 72B Instruct** on dynamically generated scenarios:
+
+| Difficulty | Score | Notes |
+|-----------|-------|-------|
+| Easy | **1.00** | Perfect severity classification |
+| Medium | **~0.77** | Demands mathematically precise root causes |
+| Hard | **~0.80** | Heavily penalizes loose or verbose action descriptions |
 
 ------------------------------------------------------------------------
 
-� Cross-Episode Memory (Simulated Multi-Step Reasoning)
+## Cross-Episode Memory (Simulated Multi-Step Reasoning)
 
-Although the environment itself is strictly single-step per episode, we extend agent capability by introducing a cross-episode memory mechanism in the inference pipeline.
+Although the environment itself is strictly single-step per episode, we extend agent capability by introducing a **cross-episode memory mechanism** in the inference pipeline.
 
-! Key Idea
+### Key Idea
 
 Instead of modifying the environment (which remains stateless), we simulate multi-step reasoning by:
 
-Storing the previous episodes trajectory
-Feeding it back into the agents prompt for the next episode
+1. **Storing** the previous episode's trajectory (action, reward, feedback)
+2. **Feeding** it back into the agent's prompt for the next episode
 
 This allows the agent to learn from past mistakes and iteratively improve decisions across episodes.
 
- How It Works
+### How It Works
 
 After each episode, we store:
 
-Agent action
-Reward received
-Feedback from the environment
+```json
 {
-  "action": {...},
+  "action": {"severity": "P2", "root_cause": "..."},
   "reward": 0.52,
   "feedback": "Incorrect root cause..."
 }
+```
 
-This is saved in a persistent memory file:
+This is saved in a persistent memory file: `memory/trajectory.json`
 
-memory/trajectory.json
+### Memory → Prompt Injection
 
+Before generating the next action, the agent's prompt is augmented with:
 
- Memory  Prompt Injection
-
-Before generating the next action, the agent is given:
-
+```
 PREVIOUS ATTEMPTS:
-Step 1:
-Action: ...
-Reward: ...
-Observation: ...
-
-Step 2:
-...
+Step 1: Action: ... | Reward: 0.52 | Feedback: ...
+Step 2: Action: ... | Reward: 0.85 | Feedback: ...
+```
 
 This enables the model to:
+- Identify incorrect reasoning patterns
+- Avoid repeating mistakes
+- Improve root cause identification and prioritization
 
-Identify incorrect reasoning patterns
-Avoid repeating mistakes
-Improve root cause identification and prioritization
-
-  Why This Matters
-
-Even though the environment is single-step:
-
-The agent becomes trajectory-aware
-Decision-making becomes iterative instead of one-shot
-This simulates reinforcement learning-style improvement without modifying the environment
- Observed Impact
+### Observed Impact
 
 This mechanism had minimal effect on easy tasks (already near optimal), but showed clear improvement on hard cascading failure scenarios, where reasoning depth matters.
 
@@ -458,24 +394,15 @@ openenv push --repo-id `<your-username>`{=html}/incident-triage
 
 ------------------------------------------------------------------------
 
-## Automated Agent Scores (w/ Dynamic Gen)
-
-  Difficulty   Score
-  ------------ -------
-  Easy         1.00
-  Medium       0.77
-  Hard         0.80
-
-------------------------------------------------------------------------
-
- Memory Snapshot
+## Memory Snapshot
 
 Example of stored trajectory:
 
+```bash
 cat memory/trajectory.json
+```
 
 <img width="1897" height="342" alt="image" src="https://github.com/user-attachments/assets/0f24743c-d415-4e1b-9fce-54618a249376" />
-
 
 The agent stores full episode trajectories including alerts, logs, actions, and rewards.
 This enables cross-episode reasoning, where the model can identify failure patterns and improve decisions in subsequent attempts.
