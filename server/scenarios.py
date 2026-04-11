@@ -223,6 +223,35 @@ SCENARIOS = {
                 "assigned_team": "backend",
             },
         },
+        {
+            "id": "medium_04",
+            "alerts": [{
+                "id": "A",
+                "title": "Database CPU usage critical",
+                "message": (
+                    "ALERT: PostgreSQL CPU spiked to 98%. "
+                    "Service degrades reported by some users."
+                ),
+                "service": "postgres-primary",
+                "timestamp": "2024-03-15T09:00:00Z",
+            }],
+            "logs": [
+                "postgres-primary: WARN  - high cpu detected",
+                "analytics-service: INFO - started daily batch job",
+                "analytics-service: ERROR - unoptimized query taking 45s",
+                "api-gateway: WARN  - requests slowing down due to db latency"
+            ],
+            "metrics": {
+                "db_cpu": "98%",
+                "query_latency": "45000ms",
+                "active_connections": "40/100"
+            },
+            "correct_answer": {
+                "severity": "P2",
+                "root_cause": "database_query_overload",
+                "assigned_team": "database",
+            },
+        },
     ],
 
     
@@ -378,6 +407,55 @@ SCENARIOS = {
                 "assigned_team": "backend",
             },
         },
+        {
+            "id": "hard_03",
+            "alerts": [
+                {
+                    "id": "A",
+                    "title": "Upstream timeout on API gateway",
+                    "message": "CRITICAL: api-gateway returning 504 Gateway Timeout for 60% of requests.",
+                    "service": "api-gateway",
+                    "timestamp": "2024-03-15T11:00:00Z",
+                },
+                {
+                    "id": "B",
+                    "title": "Inventory service pod crash looping",
+                    "message": "ALERT: inventory-service pods restarting. CrashLoopBackOff.",
+                    "service": "inventory-service",
+                    "timestamp": "2024-03-15T10:55:00Z",
+                },
+                {
+                    "id": "C",
+                    "title": "Message queue backlog",
+                    "message": "WARN: RabbitMQ queue 'inventory_updates' backlog > 10,000 messages.",
+                    "service": "rabbitmq",
+                    "timestamp": "2024-03-15T10:57:00Z",
+                }
+            ],
+            "logs": [
+                "inventory-service: FATAL - OOMKilled by Kubernetes (PRIMARY FAILURE)",
+                "inventory-service: INFO  - Heap usage 100%, memory leak in item cache",
+                "rabbitmq: WARN  - Consumers disconnected for inventory_updates",
+                "api-gateway: ERROR - Upstream inventory-service unavailable (timeout)",
+                "api-gateway: INFO  - 504 errors spiking after inventory offline"
+            ],
+            "metrics": {
+                "inventory_memory": "100%",
+                "queue_size": "10500",
+                "gateway_504_rate": "60%"
+            },
+            "correct_answer": {
+                "root_cause_alert": "B",
+                "severity": "P1",
+                "priority_order": ["B", "C", "A"],
+                "actions": {
+                    "B": "roll_back_inventory_service_or_increase_memory_limit",
+                    "C": "monitor_queue_will_drain_when_inventory_recovers",
+                    "A": "monitor_gateway_will_recover_when_inventory_recovers"
+                },
+                "assigned_team": "backend"
+            }
+        },
     ],
 }
 
@@ -395,8 +473,6 @@ def apply_dynamic_layer(base_scenario, rng: random.Random):
     latency_multiplier = rng.uniform(0.8, 1.25)
     metric_shift = rng.randint(-10, 10)
     
-    scenario_str = json.dumps(scenario)
-    
     def repl_num(match):
         val = match.group(0)
         try:
@@ -410,5 +486,20 @@ def apply_dynamic_layer(base_scenario, rng: random.Random):
             pass
         return val
 
-    scenario_str = re.sub(r'\b\d+(ms|%)\b', repl_num, scenario_str)
-    return json.loads(scenario_str)
+    def perturb_dict(d):
+        for k, v in dict(d).items():
+            if k == "correct_answer":
+                continue
+            if isinstance(v, str):
+                d[k] = re.sub(r'\b\d+(ms|%)\b', repl_num, v)
+            elif isinstance(v, dict):
+                perturb_dict(v)
+            elif isinstance(v, list):
+                for i, item in enumerate(v):
+                    if isinstance(item, str):
+                        v[i] = re.sub(r'\b\d+(ms|%)\b', repl_num, item)
+                    elif isinstance(item, dict):
+                        perturb_dict(item)
+
+    perturb_dict(scenario)
+    return scenario

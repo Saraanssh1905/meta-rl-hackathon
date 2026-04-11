@@ -186,7 +186,7 @@ def safe_parse(raw):
         start = raw.find("{")
         end = raw.rfind("}") + 1
         data = json.loads(raw[start:end])
-    except:
+    except (json.JSONDecodeError, ValueError, KeyError):
         data = {}
 
     # FORCE CORRECT TYPES
