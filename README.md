@@ -73,12 +73,11 @@ done = True(1 step per episode)
 ##   Design Decisions
 
 ### Single-Step Episodes
-We intentionally designed each episode to be a single step.
+We intentionally designed each episode as a single step — not because multi-step wasn't possible, but because it isolates the evaluation signal we care about most: **reasoning quality under uncertainty**.
 
-Reason:
-- Focus on decision quality rather than exploration
-- Makes evaluation deterministic and reproducible
-- Aligns with real-world triage (you usually act once, not in loops)
+In a multi-step environment, the reward signal becomes entangled with exploration strategy, action sequencing, and state-transition dynamics. By constraining episodes to a single decision, the reward directly measures *diagnostic reasoning* — the ability to synthesize noisy alerts, logs, and metrics into a correct triage decision. This is the core skill that separates a competent on-call engineer from a novice.
+
+To compensate for the single-step constraint, our inference pipeline implements a **cross-episode memory mechanism** (see below) that injects previous trajectories into the agent's prompt, effectively enabling multi-step reasoning *across* episodes without modifying the environment's stateless contract. The environment evaluates; the agent learns.
 
 ### Weighted Reward Components
 We assigned different weights to each component:
