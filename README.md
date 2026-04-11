@@ -157,7 +157,7 @@ Grading:
 
 Alert + logs + metrics  severity + root cause + team
 
-3 scenarios:
+4 scenarios (including misleading DB CPU vs Query load edge cases):
 
 <img width="883" height="240" alt="image" src="https://github.com/user-attachments/assets/1562984a-69ff-4960-ade3-81e6b5a865be" />
 
@@ -179,7 +179,7 @@ Grading:
 
 Multiple alerts +logs+metrics  full triage decision.
 
-2 scenarios:
+3 scenarios (including deep cascading timeout failures with red herrings):
 
 <img width="868" height="253" alt="image" src="https://github.com/user-attachments/assets/48afbb64-3dd6-4bdf-85ac-5a5470bfde99" />
 
@@ -327,8 +327,8 @@ Following full LLM reasoning via Qwen 72B Instruct on **Dynamic Generative Scena
   Difficulty   Validation Score
   ------------ ----------------
   Easy         **1.00** *(Perfect routing & diagnosis)*
-  Medium       **~0.86** *(Near optimal assignments)*
-  Hard         **~0.90** *(Significant resilience to noise / cascaded failures)*
+  Medium       **~0.77** *(Demands mathematically precise root causes)*
+  Hard         **~0.80** *(Heavily penalizes loose or verbose action descriptions)*
 
 ------------------------------------------------------------------------
 
@@ -395,14 +395,14 @@ This mechanism had minimal effect on easy tasks (already near optimal), but show
 
 ------------------------------------------------------------------------
 
-##  Limitations
+##  Limitations & Anti-Hacking Defenses
 
-- Root cause matching is string-based (not semantic understanding)
-- Single-step episodes limit long-horizon learning
+- **Strict String Matching:** We consciously rejected semantic/LLM-as-a-judge evaluation to prevent rate limiting and ensure 100% determinism. Furthermore, our `fuzzy_match` strictly requires 60% term overlap and multi-keyword intersections to prevent "reward hacking" (where LLMs output massive buzzword lists to accidentally trigger scores).
+- **Single-step episodes:** While this limits long-horizon learning, it perfectly mirrors the standard OpenEnv interface while our inference pipeline handles the cross-episode memory simulation.
 
 These were conscious trade-offs to ensure:
-- Deterministic evaluation
-- Fast inference
+- Deterministic and hack-proof grading
+- Fast and reliable Judge inference
 - Simplicity for hackathon constraints
 
 ------------------------------------------------------------------------
@@ -453,8 +453,8 @@ openenv push --repo-id `<your-username>`{=html}/incident-triage
   Difficulty   Score
   ------------ -------
   Easy         1.00
-  Medium       0.86
-  Hard         0.90
+  Medium       0.77
+  Hard         0.80
 
 ------------------------------------------------------------------------
 
