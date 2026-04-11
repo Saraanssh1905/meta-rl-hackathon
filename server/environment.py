@@ -34,13 +34,8 @@ def fuzzy_match(pred, expected):
             if any(v in pred for v in vals):
                 return True
 
-    # keyword overlap (more forgiving)
-    p_words = set(pred.split())
-    e_words = set(expected.split())
-
-    overlap = len(p_words & e_words)
-
-    return overlap >= max(1, len(e_words) // 3)
+    # Explicit string matching required - removed aggressive keyword overlap
+    return False
 
 # Class-level storage so state persists across requests
 _sessions = {}
@@ -260,7 +255,9 @@ class IncidentTriageEnvironment(Environment):
                 fb.append("Root cause: ")
             else:
             # PARTIAL MATCH
-                if any(word in action.root_cause.lower() for word in correct["root_cause"].split("_")):
+                target_words = correct["root_cause"].split("_")
+                match_count = sum(1 for word in target_words if len(word) > 3 and word in action.root_cause.lower())
+                if match_count >= max(2, len(target_words) // 2):
                     score += 0.20
                     fb.append("Root cause: partial (matched keywords)")
                 else:
@@ -348,7 +345,7 @@ class IncidentTriageEnvironment(Environment):
                 agent_act = action.actions.get(alert_id, "")
                 cwords = set(correct_act.lower().replace("_", " ").split())
                 awords = set(agent_act.lower().replace("_", " ").split())
-                if len(cwords & awords) >= len(cwords) * 0.25:
+                if len(cwords & awords) >= max(2, int(len(cwords) * 0.6)):
                     matches += 1
             score += (matches / len(ca)) * 0.20
             fb.append(f"Actions: {matches}/{len(ca)}")

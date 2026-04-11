@@ -244,7 +244,7 @@ async def main(base_url):
 
         reset_memory()  #  MEMORY PERSISTS ACROSS EPISODES
 
-        for ep in range(3):
+        for ep in range(4):
 
             rewards_all = []
             steps_taken = 0
