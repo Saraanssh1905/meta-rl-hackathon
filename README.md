@@ -124,6 +124,9 @@ The agent outputs a structured triage decision depending on difficulty:
 
 ## Observation Space
 
+<img width="830" height="764" alt="image" src="https://github.com/user-attachments/assets/8a2a3e80-9497-4514-b338-028adc319930" />
+
+
 | Field | Type | Description |
 |-------|------|-------------|
 | `task_id` | `str` | Unique scenario identifier (e.g. `easy_01`, `hard_02_gen_a3f1c2`) |
