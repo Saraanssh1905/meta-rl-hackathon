@@ -1,5 +1,5 @@
 """
-Incident scenarios: 6 easy, 3 medium, 2 hard.
+Incident scenarios: 6 easy, 4 medium, 3 hard.
 Each has alert data (shown to agent) and correct_answer (used for grading).
 """
 
