@@ -203,7 +203,7 @@ SCENARIOS = {
                 "timestamp": "2024-03-15T08:00:00Z",
             }],
             "logs": [
-                "recommendation-service: ERROR - mdoel_cache_memory_leak detected",
+                "recommendation-service: ERROR - model_cache_memory_leak detected",
                 "recommendation-service: DEBUG - New model loaded at 02:00, old not evicted",
                 
                 "recommendation-service: WARN  - Heap usage 87%, GC pause 800ms",

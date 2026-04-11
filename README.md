@@ -107,102 +107,109 @@ We intentionally added **noise and misleading signals** in hard tasks to simulat
 
 The agent outputs a structured triage decision depending on difficulty:
 
-- Easy  only severity
-- Medium  severity + root cause + team
-- Hard  full triage (ordering + actions)
+- **Easy** → only severity
+- **Medium** → severity + root cause + team
+- **Hard** → full triage (ordering + actions)
 
-
-<img width="886" height="472" alt="image" src="https://github.com/user-attachments/assets/f4de333b-94f7-4e37-a7fa-25ac2758557e" />
-
-
-
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `severity` | `str` | Always | P1 / P2 / P3 / P4 classification |
+| `root_cause` | `str` | Medium / Hard | Snake_case root cause identifier (e.g. `db_connection_pool_exhaustion`) |
+| `assigned_team` | `str` | Medium / Hard | One of: `backend`, `frontend`, `database`, `network`, `security`, `infra` |
+| `root_cause_alert` | `str` | Hard only | Alert ID (A / B / C) that is the root cause of the cascade |
+| `priority_order` | `List[str]` | Hard only | Alert IDs in the order they should be addressed |
+| `actions` | `Dict[str, str]` | Hard only | Per-alert recommended action keyed by alert ID |
 
 ------------------------------------------------------------------------
 
 ## Observation Space
 
-<img width="830" height="764" alt="image" src="https://github.com/user-attachments/assets/8a2a3e80-9497-4514-b338-028adc319930" />
-
-
-
+| Field | Type | Description |
+|-------|------|-------------|
+| `task_id` | `str` | Unique scenario identifier (e.g. `easy_01`, `hard_02_gen_a3f1c2`) |
+| `task_difficulty` | `str` | `"easy"`, `"medium"`, or `"hard"` |
+| `alerts` | `List[Dict]` | Alert objects — each has `id`, `title`, `message`, `service`, `timestamp` |
+| `logs` | `List[str]` | Relevant log lines (medium / hard only; empty on easy) |
+| `metrics` | `Dict[str, str]` | System metrics snapshot (medium / hard only; empty on easy) |
+| `message` | `str` | Task instructions on reset; scoring feedback after step |
+| `available_teams` | `List[str]` | `["backend", "frontend", "database", "network", "security", "infra"]` |
 
 ------------------------------------------------------------------------
 
 ## Tasks
 
-### Task 1 - Severity Classification (Easy)
+### Task 1 — Severity Classification (Easy)
 
-Single alert  classify severity. No logs or metrics provided  the agent must reason purely from alert text.
+Single alert → classify severity. No logs or metrics provided — the agent must reason purely from alert text.
 
 6 scenarios covering all severity levels:
 
-<img width="873" height="411" alt="image" src="https://github.com/user-attachments/assets/043884b0-91f3-42fa-a17c-a6c9ef559d1f" />
+| ID | Service | Correct Severity | Signal |
+|----|---------|-----------------|--------|
+| `easy_01` | payment-service | P1 | Complete payment outage, 0% success rate, 25 min duration |
+| `easy_02` | content-service | P4 | Minor 404 spike on blog pages, no user impact |
+| `easy_03` | auth-service | P1 | Login failure rate 40%, users locked out |
+| `easy_04` | logging-infra | P4 | Disk at 72%, fills in 14 days, informational only |
+| `easy_05` | search-service | P2 | Latency 200ms → 1000ms, affects ~30% of users |
+| `easy_06` | api-service | P3 | Latency 200ms → 350ms, affects <5% of users |
 
-Results:
+**Grading** (partial credit by severity distance):
 
-<img width="1904" height="299" alt="image" src="https://github.com/user-attachments/assets/cbcbd684-72bd-4197-9703-3ac37d75d985" />
-
-
-
-
-Grading:
-
-<img width="860" height="301" alt="image" src="https://github.com/user-attachments/assets/a897b747-1435-47bd-8377-7718d7a61199" />
-
-
-
-------------------------------------------------------------------------
-
-### Task 2 - Diagnose & Assign (Medium)
-
-Alert + logs + metrics  severity + root cause + team
-
-4 scenarios (including misleading DB CPU vs Query load edge cases):
-
-<img width="883" height="240" alt="image" src="https://github.com/user-attachments/assets/1562984a-69ff-4960-ade3-81e6b5a865be" />
-
-Results:
-
-
-<img width="1905" height="200" alt="image" src="https://github.com/user-attachments/assets/bf8da480-1aa6-45df-862f-08859c94dc8a" />
-
-
-
-Grading:
-
-<img width="884" height="256" alt="image" src="https://github.com/user-attachments/assets/2a695923-bdcc-426a-aa12-1537664477fb" />
-
+| Distance | Score |
+|----------|-------|
+| Exact match | 1.0 |
+| Off by 1 level | 0.7 |
+| Off by 2 levels | 0.4 |
+| Off by 3 levels | 0.1 |
 
 ------------------------------------------------------------------------
 
-### Task 3 - Cascading Failure (Hard)
+### Task 2 — Diagnose & Assign (Medium)
 
-Multiple alerts +logs+metrics  full triage decision.
+Alert + logs + metrics → severity + root cause + team
+
+4 scenarios (including misleading DB CPU vs query load edge cases):
+
+| ID | Service | Severity | Root Cause | Team |
+|----|---------|----------|------------|------|
+| `medium_01` | checkout-service | P2 | `db_connection_pool_exhaustion` | database |
+| `medium_02` | api-gateway | P2 | `geoip_waf_misconfiguration` | security |
+| `medium_03` | recommendation-service | P3 | `model_cache_memory_leak` | backend |
+| `medium_04` | postgres-primary | P2 | `database_query_overload` | database |
+
+**Grading** (weighted component scoring):
+
+| Component | Weight | Scoring |
+|-----------|--------|---------|
+| Severity | 0.40 | Exact = full; off-by-1 = 0.20; else = 0.0 |
+| Root Cause | 0.35 | Exact/synonym match = full; ≥50% keyword match = 0.20; else = 0.0 |
+| Team | 0.25 | Exact match only |
+
+------------------------------------------------------------------------
+
+### Task 3 — Cascading Failure Triage (Hard)
+
+Multiple alerts + logs + metrics → full triage decision with root cause identification, priority ordering, and per-alert remediation actions.
 
 3 scenarios (including deep cascading timeout failures with red herrings):
 
-<img width="868" height="253" alt="image" src="https://github.com/user-attachments/assets/48afbb64-3dd6-4bdf-85ac-5a5470bfde99" />
+| ID | Alerts | Root Cause Alert | Cascade Pattern | Team |
+|----|--------|-----------------|-----------------|------|
+| `hard_01` | Payment 500s, Redis memory critical, Auth timeouts | B (Redis) | Redis → Payment DB fallback → Auth token cache miss | database |
+| `hard_02` | CDN origin errors, LB health fails, Deployment completed | C (Deploy) | Bad deploy → Server segfaults → LB removes hosts → CDN fails | backend |
+| `hard_03` | API gateway 504s, Inventory pod crash loop, MQ backlog | B (Inventory) | OOMKill → Consumers disconnect → Gateway upstream timeout | backend |
 
+**Grading** (weighted component scoring with anti-hack defenses):
 
+| Component | Weight | Scoring |
+|-----------|--------|---------|
+| Root Cause Alert | 0.30 | Exact match = full; partial = 0.15; else = 0.0 |
+| Severity | 0.20 | Exact = full; off-by-1 = 0.10; off-by-2 = 0.05 |
+| Priority Order | 0.30 | Set overlap ratio (all correct = full) |
+| Team | 0.10 | Exact/synonym match = full; partial = 0.05 |
+| Actions | 0.20 | Per-action keyword match requiring ≥60% overlap (anti-hack threshold) |
 
-<img width="873" height="255" alt="image" src="https://github.com/user-attachments/assets/db2d8dc4-4bd9-40d3-acb5-970a2d78046a" />
-
-
-
-Results:
-
-<img width="1901" height="259" alt="image" src="https://github.com/user-attachments/assets/3f8a133c-7dad-455d-b42e-a7cf8b5b32bc" />
-
-
-
-Grading: 
-
-<img width="881" height="358" alt="image" src="https://github.com/user-attachments/assets/db516ce4-a1fe-402d-b748-131f162f1bbf" />
-
-
-
-
-
+------------------------------------------------------------------------
 ------------------------------------------------------------------------
 
 ## Reward Function

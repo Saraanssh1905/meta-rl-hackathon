@@ -1,4 +1,5 @@
 import random
+import time
 import uuid
 from openenv.core.env_server import Environment
 
@@ -39,6 +40,14 @@ def fuzzy_match(pred, expected):
 
 # Class-level storage so state persists across requests
 _sessions = {}
+SESSION_TTL = 300  # 5 minutes
+
+def _cleanup_sessions():
+    """Remove expired sessions to prevent memory leaks under load."""
+    now = time.time()
+    expired = [k for k, v in _sessions.items() if now - v.get("created_at", now) > SESSION_TTL]
+    for k in expired:
+        del _sessions[k]
 
 
 class IncidentTriageEnvironment(Environment):
@@ -47,7 +56,6 @@ class IncidentTriageEnvironment(Environment):
     SUPPORTS_CONCURRENT_SESSIONS = True
 
     def __init__(self, *args, **kwargs):
-        print("INIT CALLED", args, kwargs, flush=True)
         super().__init__(*args, **kwargs)
         self._session_id = None
 
@@ -57,7 +65,10 @@ class IncidentTriageEnvironment(Environment):
         return {}
 
     def _set_session(self, data):
+        _cleanup_sessions()
         if self._session_id:
+            if "created_at" not in data:
+                data["created_at"] = time.time()
             _sessions[self._session_id] = data
 
     def reset(self, seed=None, episode_id=None, **kwargs) -> TriageObservation:
