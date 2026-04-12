@@ -224,7 +224,7 @@ Multiple alerts + logs + metrics → full triage decision with root cause identi
 
 **Results**
 
-
+<img width="1897" height="295" alt="image" src="https://github.com/user-attachments/assets/26ae4d68-000b-4435-8e17-a0ee8f581559" />
 
 ------------------------------------------------------------------------
 
