@@ -302,7 +302,7 @@ Baseline scores using **Qwen 72B Instruct** on dynamically generated scenarios:
 | Difficulty | Score | Notes |
 |-----------|-------|-------|
 | Easy | **1.00** | Perfect severity classification |
-| Medium | **~0.77** | Demands mathematically precise root causes |
+| Medium | **~0.71** | Demands mathematically precise root causes |
 | Hard | **~0.80** | Heavily penalizes loose or verbose action descriptions |
 
 ------------------------------------------------------------------------
