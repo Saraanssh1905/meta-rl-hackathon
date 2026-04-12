@@ -207,7 +207,7 @@ Multiple alerts + logs + metrics → full triage decision with root cause identi
 |-----------|--------|---------|
 | Root Cause Alert | 0.30 | Exact match = full; partial = 0.15; else = 0.0 |
 | Severity | 0.20 | Exact = full; off-by-1 = 0.10; off-by-2 = 0.05 |
-| Priority Order | 0.30 | Set overlap ratio (all correct = full) |
+| Priority Order | 0.30 | Position-aware: 60% positional accuracy + 40% root-cause-first bonus |
 | Team | 0.10 | Exact/synonym match = full; partial = 0.05 |
 | Actions | 0.20 | Per-action keyword match requiring ≥60% overlap (anti-hack threshold) |
 

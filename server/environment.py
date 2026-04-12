@@ -324,13 +324,22 @@ class IncidentTriageEnvironment(Environment):
         if action.priority_order:
             co = [x.upper() for x in correct["priority_order"]]
             ao = [x.upper() for x in action.priority_order]
-            overlap = len(set(ao) & set(co))
-            score += (overlap / len(co)) * 0.30
+            # Position-aware scoring: reward correct items in correct positions
+            positional_matches = sum(1 for a, c in zip(ao, co) if a == c)
+            first_correct = 1 if (ao and co and ao[0] == co[0]) else 0
 
-            if overlap == len(co):
-                fb.append("Priority: ")
-            elif overlap > 0:
-                fb.append(f"Priority: partial ({overlap}/{len(co)})")
+            # 60% weight on positional accuracy, 40% on getting root cause first
+            pos_score = (positional_matches / len(co)) * 0.60
+            first_score = first_correct * 0.40
+            priority_reward = (pos_score + first_score) * 0.30
+            score += priority_reward
+
+            if positional_matches == len(co):
+                fb.append("Priority: correct (exact order)")
+            elif first_correct:
+                fb.append(f"Priority: partial (root cause correct, {positional_matches}/{len(co)} positions)")
+            elif positional_matches > 0:
+                fb.append(f"Priority: partial ({positional_matches}/{len(co)} positions, wrong root cause first)")
             else:
                 fb.append("Priority: ")
         else:
