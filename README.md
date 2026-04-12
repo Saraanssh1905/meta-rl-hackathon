@@ -167,6 +167,7 @@ Single alert → classify severity. No logs or metrics provided — the agent mu
 
 **Results**
 
+<img width="1901" height="355" alt="image" src="https://github.com/user-attachments/assets/49f63338-f424-4fd2-9b67-93e90ed4114f" />
 
 
 ------------------------------------------------------------------------
@@ -193,6 +194,9 @@ Alert + logs + metrics → severity + root cause + team
 | Team | 0.25 | Exact match only |
 
 **Results**
+
+<img width="1895" height="275" alt="image" src="https://github.com/user-attachments/assets/f6a2a2af-260f-4ea3-b937-e646a2660e3b" />
+
 
 ------------------------------------------------------------------------
 
