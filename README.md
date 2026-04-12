@@ -164,6 +164,11 @@ Single alert → classify severity. No logs or metrics provided — the agent mu
 | Off by 2 levels | 0.4 |
 | Off by 3 levels | 0.1 |
 
+
+**Results**
+
+
+
 ------------------------------------------------------------------------
 
 ### Task 2 — Diagnose & Assign (Medium)
@@ -186,6 +191,8 @@ Alert + logs + metrics → severity + root cause + team
 | Severity | 0.40 | Exact = full; off-by-1 = 0.20; else = 0.0 |
 | Root Cause | 0.35 | Exact/synonym match = full; ≥50% keyword match = 0.20; else = 0.0 |
 | Team | 0.25 | Exact match only |
+
+**Results**
 
 ------------------------------------------------------------------------
 
@@ -210,6 +217,10 @@ Multiple alerts + logs + metrics → full triage decision with root cause identi
 | Priority Order | 0.30 | Position-aware: 60% positional accuracy + 40% root-cause-first bonus |
 | Team | 0.10 | Exact/synonym match = full; partial = 0.05 |
 | Actions | 0.20 | Per-action keyword match requiring ≥60% overlap (anti-hack threshold) |
+
+**Results**
+
+
 
 ------------------------------------------------------------------------
 
