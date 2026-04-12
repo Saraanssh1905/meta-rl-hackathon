@@ -11,13 +11,7 @@ app = create_fastapi_app(
 
 @app.get("/")
 async def root():
-    return {
-        "environment": "Incident Triage & Escalation",
-        "status": "running",
-        "docs": "/docs",
-        "tasks": ["easy (6 scenarios)", "medium (4 scenarios)", "hard (3 scenarios)"],
-        "version": "1.0.0"
-    }
+    return RedirectResponse(url="/docs")
 
 #  Used by OpenEnv
 def main():
