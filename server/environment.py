@@ -331,7 +331,7 @@ class IncidentTriageEnvironment(Environment):
             # 60% weight on positional accuracy, 40% on getting root cause first
             pos_score = (positional_matches / len(co)) * 0.60
             first_score = first_correct * 0.40
-            priority_reward = (pos_score + first_score) * 0.30
+            priority_reward = (pos_score + first_score) * 0.25
             score += priority_reward
 
             if positional_matches == len(co):
@@ -367,7 +367,7 @@ class IncidentTriageEnvironment(Environment):
                 awords = set(agent_act.lower().replace("_", " ").split())
                 if len(cwords & awords) >= max(2, int(len(cwords) * 0.6)):
                     matches += 1
-            score += (matches / len(ca)) * 0.20
+            score += (matches / len(ca)) * 0.15
             fb.append(f"Actions: {matches}/{len(ca)}")
         else:
             fb.append("Actions: not provided")

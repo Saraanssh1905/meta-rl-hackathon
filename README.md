@@ -43,20 +43,31 @@ Our goal was to build something that:
 
 ------------------------------------------------------------------------
 
-## - Repository Structure
+## Repository Structure
 
 
 <img width="1024" height="665" alt="image" src="https://github.com/user-attachments/assets/61fb4cf8-c7d8-44bb-84d4-b186ade81734" />
 
+```
+meta-rl-hackathon/
+├── server/
+│   ├── app.py              # FastAPI application entry point
+│   ├── environment.py      # Core RL environment (reset/step/grade)
+│   └── scenarios.py        # 13 scenario definitions + dynamic layer
+├── models.py               # Pydantic data contracts (Action/Observation/State)
+├── client.py               # Agent-environment communication interface
+├── inference.py            # Baseline LLM agent with cross-episode memory
+├── Dockerfile              # HF Spaces deployment
+└── README.md
+```
 
+### Architecture Overview
 
-###  Architecture Overview
-
-- `server/`  Backend simulation (what the agent interacts with)
-- `models.py`  Data contracts between agent and environment
-- `client.py`  Interface used by agents to communicate with the env
-- `inference.py`  Baseline agent using an LLM
-- `Dockerfile`  Deployment layer (HF Spaces)
+- `server/` → Backend simulation (what the agent interacts with)
+- `models.py` → Data contracts between agent and environment
+- `client.py` → Interface used by agents to communicate with the env
+- `inference.py` → Baseline agent using an LLM
+- `Dockerfile` → Deployment layer (HF Spaces)
 
 ------------------------------------------------------------------------
 
@@ -115,7 +126,7 @@ The agent outputs a structured triage decision depending on difficulty:
 | `severity` | `str` | Always | P1 / P2 / P3 / P4 classification |
 | `root_cause` | `str` | Medium / Hard | Snake_case root cause identifier (e.g. `db_connection_pool_exhaustion`) |
 | `assigned_team` | `str` | Medium / Hard | One of: `backend`, `frontend`, `database`, `network`, `security`, `infra` |
-| `root_cause_alert` | `str` | Hard only | Alert ID (A / B / C) that is the root cause of the cascade |
+| `root_cause_alert` | `str` | Hard only | Alert ID (`"A"`, `"B"`, or `"C"`) identifying the root cause of the cascade |
 | `priority_order` | `List[str]` | Hard only | Alert IDs in the order they should be addressed |
 | `actions` | `Dict[str, str]` | Hard only | Per-alert recommended action keyed by alert ID |
 
@@ -218,9 +229,9 @@ Multiple alerts + logs + metrics → full triage decision with root cause identi
 |-----------|--------|---------|
 | Root Cause Alert | 0.30 | Exact match = full; partial = 0.15; else = 0.0 |
 | Severity | 0.20 | Exact = full; off-by-1 = 0.10; off-by-2 = 0.05 |
-| Priority Order | 0.30 | Position-aware: 60% positional accuracy + 40% root-cause-first bonus |
+| Priority Order | 0.25 | Position-aware: 60% positional accuracy + 40% root-cause-first bonus |
 | Team | 0.10 | Exact/synonym match = full; partial = 0.05 |
-| Actions | 0.20 | Per-action keyword match requiring ≥60% overlap (anti-hack threshold) |
+| Actions | 0.15 | Per-action keyword match requiring ≥60% overlap (anti-hack threshold) |
 
 **Results**
 
@@ -303,7 +314,7 @@ Baseline scores using **Qwen 72B Instruct** on dynamically generated scenarios:
 |-----------|-------|-------|
 | Easy | **1.00** | Perfect severity classification |
 | Medium | **~0.71** | Demands mathematically precise root causes |
-| Hard | **~0.80** | Heavily penalizes loose or verbose action descriptions |
+| Hard | **~0.75** | Heavily penalizes loose or verbose action descriptions |
 
 ------------------------------------------------------------------------
 
@@ -378,11 +389,13 @@ This would make the environment closer to real production systems.
 
 ------------------------------------------------------------------------
 
-## Setup (Run commands on git bash terminal)
+## Setup
 
 ### Install
 
+```bash
 pip install openenv-core fastapi uvicorn pydantic openai
+```
 
 ### Run locally
 
@@ -441,13 +454,15 @@ https://huggingface.co/spaces/Saraanssh1905/incident-triage
 
 ------------------------------------------------------------------------
 
-##  Team Contributions
+## Team Contributions
 
 - **Omkar Iyer**
-  - Designed evaluation logic and reward shaping
-  - Worked on deployment and validation
+  - Designed the weighted evaluation logic and dense reward shaping across all 3 difficulty tiers
+  - Implemented `_grade_easy()`, `_grade_medium()`, and `_grade_hard()` with anti-hack defenses
+  - Managed Docker deployment and `openenv validate` compliance
 
 - **Saraanssh Mehra**
-  - Built environment simulation and scenarios
-  - Implemented backend and API integration
+  - Built the core `IncidentTriageEnvironment` class with session management and TTL cleanup
+  - Designed all 13 scenarios across easy/medium/hard with the dynamic perturbation layer
+  - Implemented the baseline inference pipeline with cross-episode memory mechanism
 
